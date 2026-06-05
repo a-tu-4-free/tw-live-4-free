@@ -7,12 +7,12 @@ let activeTab = { tw: '軍事', ccp: '軍事' };
 let pendingCCPTrigger = null;
 
 // ── 初始化 ───────────────────────────────────────────────
-function init(mode) {
-  G = createInitialState(mode || 'vs_ai');
+function init() {
+  G = createInitialState('vs_ai');
   G.tw.score  = computeTWScore(G);
   G.ccp.score = computeCCPScore(G);
   renderAll();
-  addLog({ faction:'event', text:'遊戲開始。臺灣 vs 中共，守住現狀或被蠶食鯨吞？', quarter:'2026Q1' });
+  addLog({ faction:'event', text:'遊戲開始。你是臺灣，中共每季隨機出招。守住，或被蠶食？', quarter:'2026Q1' });
   renderAll();
 }
 
@@ -64,16 +64,14 @@ function renderHeader() {
 
 
 function renderTWPanel() {
-  const locked = G.mode === 'two_player' && G.activeFaction !== 'tw';
   document.getElementById('tw-ap').textContent = G.tw.ap;
   document.getElementById('tw-score').textContent = Math.round(G.tw.score);
   document.getElementById('tw-stats').innerHTML = renderTWStats(G);
-  renderTWCards(locked);
-  document.getElementById('tw-panel').classList.toggle('panel-locked', locked);
-  document.getElementById('tw-lock-msg').style.display = locked ? 'flex' : 'none';
+  renderTWCards();
+  document.getElementById('tw-lock-msg').style.display = 'none';
 }
 
-function renderTWCards(locked) {
+function renderTWCards() {
   const cards = getAllTaiwanCards();
   const cats = [...new Set(cards.map(c => c.category))];
   document.getElementById('tw-tabs').innerHTML = cats.map(cat =>
@@ -81,24 +79,22 @@ function renderTWCards(locked) {
   ).join('');
   const shown = cards.filter(c => c.category === activeTab.tw);
   document.getElementById('tw-cards').innerHTML = shown.map(c => {
-    const avail = !locked && isTWCardAvailable(G, c.id);
+    const avail = isTWCardAvailable(G, c.id);
     const cd = G.tw.cooldowns[c.id] || 0;
     return renderCard(c, avail, 'tw', cd);
   }).join('');
 }
 
 function renderCCPPanel() {
-  const locked = G.mode === 'two_player' && G.activeFaction !== 'ccp';
   document.getElementById('ccp-ap').textContent = G.ccp.ap;
   document.getElementById('ccp-score').textContent = Math.round(G.ccp.score);
   document.getElementById('ccp-stats').innerHTML = renderCCPStats(G);
   document.getElementById('infil-track').innerHTML = renderInfiltrationTracker(G);
-  renderCCPCards(locked);
-  document.getElementById('ccp-panel').classList.toggle('panel-locked', locked);
-  document.getElementById('ccp-lock-msg').style.display = locked ? 'flex' : 'none';
+  renderCCPCards();
+  document.getElementById('ccp-lock-msg').style.display = 'none';
 }
 
-function renderCCPCards(locked) {
+function renderCCPCards() {
   const cards = getAllCCPCards();
   const cats = [...new Set(cards.map(c => c.category))];
   document.getElementById('ccp-tabs').innerHTML = cats.map(cat =>
@@ -106,7 +102,7 @@ function renderCCPCards(locked) {
   ).join('');
   const shown = cards.filter(c => c.category === activeTab.ccp);
   document.getElementById('ccp-cards').innerHTML = shown.map(c => {
-    const avail = !locked && isCCPCardAvailable(G, c.id);
+    const avail = false; // 中共由AI控制，玩家不可點擊
     const cd = G.ccp.cooldowns[c.id] || 0;
     return renderCard(c, avail, 'ccp', cd);
   }).join('');
@@ -117,16 +113,7 @@ function renderLogPanel() {
 }
 
 function renderModeBar() {
-  const el = document.getElementById('mode-bar');
-  if (G.mode === 'two_player') {
-    const who = G.activeFaction === 'tw' ? '🇹🇼 臺灣行動中' : '🇨🇳 中共行動中';
-    const col = G.activeFaction === 'tw' ? '#3a9eff' : '#e84040';
-    el.innerHTML = `<span style="color:${col};font-weight:700;">${who}</span>
-      <button class="end-turn-btn" onclick="endTurn()">結束回合 →</button>`;
-    el.style.display = 'flex';
-  } else {
-    el.style.display = 'none';
-  }
+  document.getElementById('mode-bar').style.display = 'none';
 }
 
 // ── Tab切換 ──────────────────────────────────────────────
@@ -169,28 +156,11 @@ window.onCardClick = function(faction, cardId) {
   renderAll(); checkGameOverUI();
 };
 
-// ── Two-player 結束回合 ───────────────────────────────────
-window.endTurn = function() {
-  if (G.activeFaction === 'tw') {
-    G.activeFaction = 'ccp';
-    showToast('中共玩家，輪到你了', 'ccp');
-  } else {
-    G.activeFaction = 'tw';
-    doNextQuarter();
-    return;
-  }
-  renderAll();
-};
-
 // ── 推進下一季 ───────────────────────────────────────────
 window.nextQuarter = function() {
   if (G.gameOver) return;
-  if (G.mode === 'vs_ai') {
-    G = autoCCPTurn(G);
-    doNextQuarter();
-  } else {
-    showToast('請先結束雙方回合', 'warn');
-  }
+  G = autoCCPTurn(G);
+  doNextQuarter();
 };
 
 function doNextQuarter() {
@@ -248,10 +218,10 @@ function addLog(e) {
 }
 
 // ── 重新開始 / 模式選擇 ──────────────────────────────────
-window.restartGame  = () => { document.getElementById('go-modal').classList.remove('mopen'); showModeSelect(); };
-window.showModeSelect = () => { document.getElementById('mode-modal').classList.add('mopen'); };
-window.startMode = (mode) => { document.getElementById('mode-modal').classList.remove('mopen'); init(mode); };
+window.restartGame  = () => { document.getElementById('go-modal').classList.remove('mopen'); init(); };
+window.showModeSelect = () => { init(); };
+window.startMode = () => { init(); };
 
 // ── 啟動 ─────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => showModeSelect());
+window.addEventListener('DOMContentLoaded', () => init());
 

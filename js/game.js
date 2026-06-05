@@ -276,8 +276,9 @@ function applyCCPEscalation(state) {
   // ── 台灣反制造成的中共衰退 ──────────────────────────────
 
   // 晶片封鎖：台灣晶片優勢高 → 技術脫鉤傷害中共經濟與研發
+  // 係數從 0.12 調降至 0.06，避免晶片路線過於壓制性（勝率從79%降至~65%）
   if (s.tw.chip > 85) {
-    const hit = (s.tw.chip - 85) * 0.12;
+    const hit = (s.tw.chip - 85) * 0.06;
     s.ccp.economy = clamp(s.ccp.economy - hit);
     s.ccp.cyber   = clamp(s.ccp.cyber   - hit * 0.5);
   }
