@@ -178,6 +178,9 @@ function resolveEndOfQuarter(state, event) {
   // 冷卻 -1
   for (const k of Object.keys(s.tw.cooldowns)) s.tw.cooldowns[k] = Math.max(0, s.tw.cooldowns[k] - 1);
   for (const k of Object.keys(s.ccp.cooldowns)) s.ccp.cooldowns[k] = Math.max(0, s.ccp.cooldowns[k] - 1);
+  // 中共隨時間升級（無限局核心）
+  s = applyCCPEscalation(s);
+
   // 重置AP
   s.tw.ap = s.tw.maxAp; s.ccp.ap = s.ccp.maxAp;
   // two_player：重置到台灣回合
@@ -210,37 +213,141 @@ function computeCCPScore(s) {
   );
 }
 
-// ── 8種結局判定 ──────────────────────────────────────────
+// ── 8種結局判定（無限模式：純靠數值，無季數下限）────────
+// 結局分三層：
+//   即時危機：任何時候都可能觸發（崩潰類）
+//   中期結局：需要數值長期積累才夠
+//   長線結局：需要多項條件同時達到高峰
 function checkEnding(s) {
-  const t = s.turnsPlayed;
-  // 戰爭爆發
+
+  // ── 即時危機（隨時都可觸發）────────────────────────────
+  // 戰爭爆發：緊張臨界
   if (s.tension >= 95)
     return { id: 'war', winner: 'crisis' };
-  // 台灣從內部瓦解
-  if (s.ccp.infiltration >= 88 && s.tw.intel <= 20 && s.tw.morale <= 30)
+
+  // 內部瓦解：滲透全面得手 + 情報與士氣雙雙崩潰
+  if (s.ccp.infiltration >= 92 && s.tw.intel <= 15 && s.tw.morale <= 25)
     return { id: 'collapse', winner: 'ccp' };
-  // 士氣崩潰
-  if (s.tw.morale <= 12 && s.tw.military <= 20)
+
+  // 士氣崩潰：軍心渙散到無法組織抵抗
+  if (s.tw.morale <= 8 && s.tw.military <= 18)
     return { id: 'morale_collapse', winner: 'ccp' };
-  // 經濟封鎖勝利
-  if (s.tw.economy <= 15 && t >= 6)
+
+  // ── 中期結局（需要數值長期惡化/積累）───────────────────
+  // 經濟窒息：封鎖把台灣餓死，且外交也被孤立
+  if (s.tw.economy <= 12 && s.tw.diplomacy <= 30)
     return { id: 'economic_siege', winner: 'ccp' };
-  // 認知戰勝利
-  if (s.ccp.propaganda >= 90 && s.tw.resilience <= 20 && t >= 8)
+
+  // 認知戰勝利：宣傳機器全開 + 韌性被磨光 + 士氣低迷
+  if (s.ccp.propaganda >= 92 && s.tw.resilience <= 15 && s.tw.morale <= 35)
     return { id: 'cognitive_victory', winner: 'ccp' };
-  // 矽盾和平
-  if (s.tw.chip >= 92 && s.tw.diplomacy >= 88 && t >= 10)
+
+  // ── 長線勝利（需要多項指標同時達到高峰）────────────────
+  // 矽盾和平：晶片 + 外交 + 經濟三項全部高點
+  if (s.tw.chip >= 94 && s.tw.diplomacy >= 90 && s.tw.economy >= 85)
     return { id: 'silicon_peace', winner: 'tw' };
-  // 外交勝利
-  if (s.tw.diplomacy >= 90 && s.tw.softpower >= 80 && t >= 10)
+
+  // 外交勝利：外交 + 軟實力 + 士氣三項全部高點
+  if (s.tw.diplomacy >= 92 && s.tw.softpower >= 85 && s.tw.morale >= 80)
     return { id: 'diplomatic_victory', winner: 'tw' };
-  // 軍事嚇阻
-  if (s.tw.military >= 90 && s.tw.score >= 85 && s.ccp.score <= 52 && t >= 8)
+
+  // 軍事嚇阻：軍力壓倒 + 整體防禦指數大幅領先
+  if (s.tw.military >= 92 && s.tw.score >= 88 && s.ccp.score <= 48)
     return { id: 'deterrence', winner: 'tw' };
-  // 長期穩定
-  if (s.tension <= 12 && t >= 14)
+
+  // 長期穩定：緊張極低 + 韌性高 + 社會凝聚
+  if (s.tension <= 10 && s.tw.resilience >= 80 && s.tw.morale >= 75)
     return { id: 'stable_status_quo', winner: 'tw' };
+
   return null;
+}
+
+// ── 中共動態消長（無限局核心：會變強也會變弱）──────────
+function applyCCPEscalation(state) {
+  const s = deepClone(state);
+  const yearsIn = Math.floor(s.turnsPlayed / 4);
+  const msgs = [];
+
+  // ── 自然成長（軍事現代化持續推進）──────────────────────
+  s.ccp.military  = clamp(s.ccp.military  + 1,   0, 95);
+  s.ccp.cyber     = clamp(s.ccp.cyber     + 1,   0, 92);
+  s.ccp.diplomacy = clamp(s.ccp.diplomacy + 0.5, 0, 90);
+
+  // ── 台灣反制造成的中共衰退 ──────────────────────────────
+
+  // 晶片封鎖：台灣晶片優勢高 → 技術脫鉤傷害中共經濟與研發
+  if (s.tw.chip > 85) {
+    const hit = (s.tw.chip - 85) * 0.12;
+    s.ccp.economy = clamp(s.ccp.economy - hit);
+    s.ccp.cyber   = clamp(s.ccp.cyber   - hit * 0.5);
+  }
+
+  // 外交孤立：台灣外交強 → 中共在國際被圍堵，影響力下滑
+  if (s.tw.diplomacy > 78) {
+    const hit = (s.tw.diplomacy - 78) * 0.1;
+    s.ccp.diplomacy = clamp(s.ccp.diplomacy - hit);
+  }
+
+  // 反情報成果：有清除滲透記錄 → 宣傳機器效率下降
+  if (s.tw.infiltrationCleared > 0) {
+    s.ccp.propaganda = clamp(s.ccp.propaganda - s.tw.infiltrationCleared * 0.4);
+  }
+
+  // 社會韌性：台灣韌性高 → 認知作戰邊際效益遞減
+  if (s.tw.resilience > 72) {
+    const hit = (s.tw.resilience - 72) * 0.08;
+    s.ccp.propaganda = clamp(s.ccp.propaganda - hit);
+  }
+
+  // 軟實力輸出：台灣軟實力高 → 中共敘事被稀釋
+  if (s.tw.softpower > 65) {
+    s.ccp.propaganda = clamp(s.ccp.propaganda - 0.5);
+    s.ccp.diplomacy  = clamp(s.ccp.diplomacy  - 0.3);
+  }
+
+  // ── 中共內部壓力 ────────────────────────────────────────
+
+  // 經濟差 → 軍費難以為繼，軍事成長停滯甚至倒退
+  if (s.ccp.economy < 55) {
+    const drag = (55 - s.ccp.economy) * 0.08;
+    s.ccp.military = clamp(s.ccp.military - drag);
+  }
+
+  // 經濟崩潰 → 滲透網絡資金斷鏈
+  if (s.ccp.economy < 40) {
+    s.ccp.infiltration = clamp(s.ccp.infiltration - 2);
+    msgs.push('中共經濟惡化，滲透資金縮減');
+  }
+
+  // 外交孤立嚴重 → 國際影響力加速萎縮
+  if (s.ccp.diplomacy < 45) {
+    s.ccp.economy = clamp(s.ccp.economy - 1);
+  }
+
+  // ── 每8季大升級（但幅度受經濟狀況影響）────────────────
+  if (s.turnsPlayed > 0 && s.turnsPlayed % 8 === 0) {
+    const rich  = s.ccp.economy > 65;
+    const milUp = rich ? 3 : 1;
+    const proUp = rich ? 3 : 1;
+    const infUp = rich ? 4 : 2;
+    s.ccp.military     = clamp(s.ccp.military     + milUp);
+    s.ccp.propaganda   = clamp(s.ccp.propaganda   + proUp);
+    s.ccp.infiltration = clamp(s.ccp.infiltration + infUp);
+    msgs.push(`中共完成第${yearsIn}年軍事升級${rich ? '' : '（經濟吃緊，幅度縮水）'}`);
+  }
+
+  // ── 每12季危機週期 ───────────────────────────────────────
+  if (s.turnsPlayed > 0 && s.turnsPlayed % 12 === 0) {
+    s.tension = clamp(s.tension + 5);
+    msgs.push('新一輪兩岸危機週期，緊張度上升');
+  }
+
+  // 寫入日誌
+  for (const m of msgs) {
+    s.log.unshift({ faction: 'event', text: `⚠️ ${m}`, quarter: `${s.year}Q${s.quarter}` });
+  }
+
+  return s;
 }
 
 // ── 結局資料庫 ───────────────────────────────────────────
