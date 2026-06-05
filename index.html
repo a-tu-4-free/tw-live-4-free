@@ -108,21 +108,24 @@
 
 </div><!-- /#app -->
 
-<!-- 模式選擇 -->
+<!-- 開始畫面 -->
 <div class="overlay mopen" id="mode-modal">
-  <div class="mbox">
-    <div class="mode-title">🗺 臺灣不沉</div>
-    <div class="mode-sub">選擇遊戲模式</div>
-    <div class="mode-btns">
-      <button class="mode-btn mode-btn-ai" onclick="startMode('vs_ai')">
-        🤖 單人 vs AI<br>
-        <span class="mode-btn-sub">你操作臺灣，中共由AI自動行動</span>
-      </button>
-      <button class="mode-btn mode-btn-2p" onclick="startMode('two_player')">
-        ⚔️ 雙人對戰<br>
-        <span class="mode-btn-sub">兩人分別操控台灣與中共，輪流行動</span>
-      </button>
+  <div class="mbox" style="text-align:center;gap:16px;">
+    <div style="font-size:48px;">🗺</div>
+    <div style="font-size:20px;font-weight:700;color:var(--chip);">臺灣不沉</div>
+    <div style="font-size:13px;color:var(--txt1);line-height:1.7;">
+      你是臺灣的決策者。<br>
+      中共每季自動出招，隨機且不講情面。<br>
+      守住現狀，或被蠶食鯨吞——沒有第三條路。
     </div>
+    <div style="font-size:11px;color:var(--txt2);padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7;">
+      台灣不是不能輸，而是輸不起。<br>
+      你準備好了嗎？
+    </div>
+    <button class="mode-btn mode-btn-ai" onclick="startMode()" style="text-align:center;">
+      ▶ 開始遊戲
+      <div class="mode-btn-sub">單機對抗 — 中共由AI控制</div>
+    </button>
   </div>
 </div>
 
