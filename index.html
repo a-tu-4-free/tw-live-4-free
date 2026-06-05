@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>臺灣不沉 — 兩岸戰略對決</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Header -->
+  <header id="header">
+    <div class="hdr-row">
+      <span class="game-title">🗺 臺灣不沉</span>
+      <div class="hdr-right">
+        <span class="yr-badge" id="hdr-year">2026 Q1</span>
+      </div>
+    </div>
+    <div class="tension-row">
+      <span class="t-lbl">兩岸緊張</span>
+      <div class="t-bg"><div id="tension-fill" style="width:40%;background:#44bb77"></div></div>
+      <span class="t-status"><span id="tension-lbl">穩定</span> <span id="tension-num">40</span></span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <div id="main">
+
+    <!-- 手機地圖（桌機隱藏） -->
+    <div id="map-wrap"><div id="map-container"></div></div>
+
+    <!-- mode bar -->
+    <div id="mode-bar"></div>
+
+    <!-- Panels row -->
+    <div id="panels">
+
+      <!-- 左欄：台灣 -->
+      <div id="tw-panel" class="panel" style="position:relative">
+        <div id="tw-lock-msg" class="lock-msg tw-lock" style="display:none">等待台灣玩家行動</div>
+        <div class="p-title ptw">
+          🇹🇼 臺灣
+          <span class="ap-badge ap-tw">AP <span id="tw-ap">3</span></span>
+        </div>
+        <div class="sdiv">防禦指數</div>
+        <div class="big-score bs-tw" id="tw-score">0</div>
+        <div class="sdiv">國力指標</div>
+        <div id="tw-stats"></div>
+        <div class="sdiv">行動牌</div>
+        <div class="tabs" id="tw-tabs"></div>
+        <div id="tw-cards" class="card-grid"></div>
+      </div>
+
+      <!-- 中欄 -->
+      <div id="center-col-wrap">
+        <!-- 桌機地圖 -->
+        <div id="map-wrap-desktop"><div id="map-container-desktop"></div></div>
+
+        <div id="center-col">
+          <div class="score-row">
+            <div class="score-box">
+              <div class="s-lbl">🇹🇼 防禦</div>
+              <div class="s-val s-tw" id="score-tw">0</div>
+            </div>
+            <div class="s-vs">
+              <div class="s-vs-t">差距</div>
+              <div class="s-lead" id="score-lead">—</div>
+            </div>
+            <div class="score-box">
+              <div class="s-lbl">🇨🇳 威脅</div>
+              <div class="s-val s-ccp" id="score-ccp">0</div>
+            </div>
+          </div>
+          <button class="next-btn" onclick="nextQuarter()">▶ 推進下一季</button>
+        </div>
+
+        <div id="log-wrap">
+          <div class="log-hd">▌ 戰情日誌</div>
+          <div id="log-entries"></div>
+        </div>
+      </div>
+
+      <!-- 右欄：中共 -->
+      <div id="ccp-panel" class="panel" style="position:relative">
+        <div id="ccp-lock-msg" class="lock-msg ccp-lock" style="display:none">等待中共玩家行動</div>
+        <div class="p-title pccp">
+          🇨🇳 中共
+          <span class="ap-badge ap-ccp">AP <span id="ccp-ap">3</span></span>
+        </div>
+        <div class="sdiv">威脅指數</div>
+        <div class="big-score bs-ccp" id="ccp-score">0</div>
+        <div class="sdiv">威脅指標</div>
+        <div id="ccp-stats"></div>
+        <div class="sdiv">滲透狀態</div>
+        <div id="infil-track"></div>
+        <div class="sdiv">行動牌</div>
+        <div class="tabs" id="ccp-tabs"></div>
+        <div id="ccp-cards" class="card-grid"></div>
+      </div>
+
+    </div><!-- /#panels -->
+
+  </div><!-- /#main -->
+
+</div><!-- /#app -->
+
+<!-- 模式選擇 -->
+<div class="overlay mopen" id="mode-modal">
+  <div class="mbox">
+    <div class="mode-title">🗺 臺灣不沉</div>
+    <div class="mode-sub">選擇遊戲模式</div>
+    <div class="mode-btns">
+      <button class="mode-btn mode-btn-ai" onclick="startMode('vs_ai')">
+        🤖 單人 vs AI<br>
+        <span class="mode-btn-sub">你操作臺灣，中共由AI自動行動</span>
+      </button>
+      <button class="mode-btn mode-btn-2p" onclick="startMode('two_player')">
+        ⚔️ 雙人對戰<br>
+        <span class="mode-btn-sub">兩人分別操控台灣與中共，輪流行動</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 事件彈窗 -->
+<div class="overlay" id="ev-modal">
+  <div class="mbox">
+    <div class="ev-tag">⚡ 本季事件</div>
+    <div id="ev-title"></div>
+    <div id="ev-body"></div>
+    <div id="ev-efx"></div>
+    <button class="ev-ok" id="ev-ok">確認並繼續 →</button>
+  </div>
+</div>
+
+<!-- 遊戲結束 -->
+<div class="overlay" id="go-modal">
+  <div class="mbox">
+    <div class="go-icon" id="go-icon">🏁</div>
+    <div id="go-title">遊戲結束</div>
+    <div id="go-headline"></div>
+    <div id="go-desc"></div>
+    <div id="go-flavor"></div>
+    <div id="go-stats"></div>
+    <button class="restart-btn" onclick="restartGame()">↺ 重新開始</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Scripts -->
+<script src="js/cards_taiwan.js"></script>
+<script src="js/cards_ccp.js"></script>
+<script src="data/custom_cards.js"></script>
+<script src="js/events.js"></script>
+<script src="js/game.js"></script>
+<script src="js/map.js"></script>
+<script src="js/render.js"></script>
+<script src="js/main.js"></script>
+
+<!-- scripts loaded via js/main.js patch -->
+
+</body>
+</html>
