@@ -217,8 +217,11 @@ function addLog(e) {
 
 // ── 重新開始 / 模式選擇 ──────────────────────────────────
 window.restartGame  = () => { document.getElementById('go-modal').classList.remove('mopen'); init(); };
-window.showModeSelect = () => { init(); };
-window.startMode = () => { init(); };
+window.showModeSelect = () => { document.getElementById('mode-modal').classList.add('mopen'); };
+window.startMode = () => {
+  document.getElementById('mode-modal').classList.remove('mopen');
+  init();
+};
 
 // ── 啟動 ─────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => init());
