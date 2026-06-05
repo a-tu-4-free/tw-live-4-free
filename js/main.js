@@ -119,16 +119,14 @@ function renderModeBar() {
 // ── Tab切換 ──────────────────────────────────────────────
 window.setTab = function(faction, cat) {
   activeTab[faction] = cat;
-  if (faction === 'tw') renderTWCards(G.mode === 'two_player' && G.activeFaction !== 'tw');
-  else renderCCPCards(G.mode === 'two_player' && G.activeFaction !== 'ccp');
+  if (faction === 'tw') renderTWCards();
+  else renderCCPCards();
 };
 
 // ── 出牌 ─────────────────────────────────────────────────
 window.onCardClick = function(faction, cardId) {
   if (G.gameOver) return;
-  if (G.mode === 'two_player' && G.activeFaction !== faction) {
-    showToast('現在不是你的回合！', 'warn'); return;
-  }
+  if (faction !== 'tw') return; // 中共由AI控制
   if (faction === 'tw') {
     const res = playTaiwanCard(G, cardId);
     if (res.error) { showToast(res.error, 'warn'); return; }
