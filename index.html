@@ -149,14 +149,14 @@
 
 <!-- 遊戲結束 -->
 <div class="overlay" id="go-modal" style="--go-bg:#001430;">
-  <div class="mbox" style="background:var(--go-bg);">
-    <div style="font-size:52px;text-align:center;" id="go-icon">🏁</div>
-    <div style="font-size:22px;font-weight:700;text-align:center;" id="go-title"></div>
-    <div style="font-size:14px;font-weight:700;text-align:center;color:var(--txt1);" id="go-headline"></div>
-    <div style="font-size:13px;color:var(--txt1);text-align:center;line-height:1.7;" id="go-desc"></div>
-    <div style="font-size:12px;color:var(--txt2);text-align:center;font-style:italic;border-top:1px solid var(--bdr);padding-top:8px;" id="go-flavor"></div>
-    <div style="font-size:12px;color:var(--txt2);text-align:center;line-height:2;" id="go-stats"></div>
-    <button class="restart-btn" onclick="restartGame()">↺ 換個陣營再玩</button>
+  <div class="mbox go-mbox" style="background:var(--go-bg);">
+    <div class="go-icon-wrap" id="go-icon">🏁</div>
+    <div class="go-title" id="go-title"></div>
+    <div class="go-headline" id="go-headline"></div>
+    <div class="go-desc" id="go-desc"></div>
+    <div class="go-stats" id="go-stats"></div>
+    <div class="go-warning" id="go-warning"></div>
+    <button class="restart-btn" onclick="restartGame()">↺ 換個陣營再玩一局</button>
   </div>
 </div>
 
