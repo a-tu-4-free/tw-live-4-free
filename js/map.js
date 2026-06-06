@@ -20,10 +20,10 @@ function initLeafletMap(containerId) {
     return;
   }
 
-  // 台海中心座標，縮放等級6
+  // 台海中心座標，縮放等級提高到7讓圖磚更清晰
   _leafletMap = L.map(containerId, {
     center: [23.8, 120.5],
-    zoom: 6,
+    zoom: 7,
     zoomControl: false,
     attributionControl: false,
     dragging: true,
@@ -34,7 +34,7 @@ function initLeafletMap(containerId) {
 
   // ESRI 世界衛星圖
   L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     {
       maxZoom: 10,
       minZoom: 5,
