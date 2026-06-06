@@ -167,7 +167,9 @@ function doNextQuarter() {
     G = resolveEndOfQuarter(G, event);
     renderAll();
     checkGameOverUI();
-    showToast(`${G.year - (G.quarter===1?0:0)}年 Q${G.quarter===1?4:G.quarter-1} 結算完成`, 'event');
+    showToast(`結算完成`, 'event');
+    // 季末可能出現軍師
+    setTimeout(() => maybeShowAdvisor(), 600);
   });
 }
 
@@ -226,3 +228,68 @@ window.startMode = () => {
 // ── 啟動 ─────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => init());
 
+
+// ── 軍師系統 ─────────────────────────────────────────────
+function maybeShowAdvisor() {
+  if (!G || G.gameOver) return;
+  const result = drawAdvisor(G.turnsPlayed);
+  if (!result) return;
+  showAdvisorModal(result);
+}
+
+function showAdvisorModal({ advisor, choices, isProCCP }) {
+  const m = document.getElementById('advisor-modal');
+  const a = advisor;
+
+  document.getElementById('adv-avatar').textContent = a.avatar;
+  document.getElementById('adv-name').textContent = a.name;
+  document.getElementById('adv-fullname').textContent = a.fullName;
+  document.getElementById('adv-type').textContent = isProCCP ? '⚠️ 來路可疑的軍師' : '✅ 可信任的軍師';
+  document.getElementById('adv-type').style.color = isProCCP ? '#ffaa33' : '#44cc88';
+  document.getElementById('adv-intro').textContent = a.intro;
+
+  const choicesEl = document.getElementById('adv-choices');
+  choicesEl.innerHTML = choices.map((card, i) => {
+    const effStr = Object.entries(card.effects || {}).map(([k,v]) =>
+      `<span class="eff ${v>0?'ep':'en'}">${fmtKey(k)} ${v>0?'+':''}${v}</span>`).join('');
+    return `
+      <div class="adv-card ${card.realEffect ? 'adv-real' : 'adv-fake'}"
+           onclick="window.pickAdvisorCard(${i})">
+        <div class="adv-card-name">${card.name}</div>
+        <div class="adv-card-desc">${card.desc}</div>
+        <div class="card-ef" style="margin-top:4px">${effStr}</div>
+      </div>`;
+  }).join('');
+
+  // 儲存選項到全域
+  window._advisorChoices = choices;
+  m.classList.add('mopen');
+}
+
+window.pickAdvisorCard = function(idx) {
+  const card = window._advisorChoices[idx];
+  if (!card) return;
+
+  if (!card.realEffect) {
+    // 偽裝牌：先顯示警告，再套用真實效果
+    showToast(card.warning || '⚠️ 這是陷阱！', 'warn');
+    setTimeout(() => {
+      G = applyAdvisorCard(G, card);
+      G.log.unshift({ faction:'ccp', text:`☠️ 中共偽裝建議：${card.name} 造成傷害`, quarter:`${G.year}Q${G.quarter}` });
+      renderAll(); checkGameOverUI();
+    }, 800);
+  } else {
+    // 正向牌：套用效果
+    G = applyAdvisorCard(G, card);
+    G.log.unshift({ faction:'tw', text:`💡 軍師建議：${card.name}`, quarter:`${G.year}Q${G.quarter}` });
+    showToast(`✓ 採納建議：${card.name}`, 'tw');
+    renderAll(); checkGameOverUI();
+  }
+
+  document.getElementById('advisor-modal').classList.remove('mopen');
+};
+
+window.skipAdvisor = function() {
+  document.getElementById('advisor-modal').classList.remove('mopen');
+  showToast('忽略軍師建議', 'event');
+};

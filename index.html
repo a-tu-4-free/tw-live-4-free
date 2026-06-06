@@ -21,8 +21,12 @@
       </div>
     </div>
     <div class="tension-row">
-      <span class="t-lbl">兩岸緊張</span>
+      <span class="t-edge t-peace">和緩😴</span>
       <div class="t-bg"><div id="tension-fill" style="width:40%;background:#44bb77"></div></div>
+      <span class="t-edge t-war">開戰💥</span>
+    </div>
+    <div class="tension-status-row">
+      <span class="t-lbl">兩岸緊張</span>
       <span class="t-status"><span id="tension-lbl">穩定</span> <span id="tension-num">40</span></span>
     </div>
   </header>
@@ -153,6 +157,24 @@
   </div>
 </div>
 
+<!-- 軍師彈窗 -->
+<div class="overlay" id="advisor-modal">
+  <div class="mbox" style="max-width:480px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:40px;" id="adv-avatar">👤</span>
+      <div>
+        <div style="font-size:16px;font-weight:700;" id="adv-name">軍師</div>
+        <div style="font-size:11px;color:var(--txt2);" id="adv-fullname"></div>
+        <div style="font-size:11px;font-weight:600;margin-top:2px;" id="adv-type"></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--txt1);line-height:1.7;font-style:italic;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;" id="adv-intro"></div>
+    <div style="font-size:11px;color:var(--txt2);">選擇一個建議，或忽略：</div>
+    <div id="adv-choices" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button class="ev-ok" style="background:rgba(255,255,255,0.06);color:var(--txt1);border-color:var(--bdr);" onclick="skipAdvisor()">略過，不採納任何建議</button>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -162,6 +184,7 @@
 <script src="data/custom_cards.js"></script>
 <script src="js/events.js"></script>
 <script src="js/game.js"></script>
+<script src="js/advisors.js"></script>
 <script src="js/map.js"></script>
 <script src="js/render.js"></script>
 <script src="js/main.js"></script>

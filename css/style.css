@@ -336,3 +336,80 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 @media(min-width:1280px){
   #tw-panel,#ccp-panel{width:330px}
 }
+
+/* ── 字體全面放大 ────────────────────────────────────────── */
+html { font-size: 15px; }
+.card-nm  { font-size: 13px; }
+.card-ds  { font-size: 12px; }
+.card-fl  { font-size: 11px; }
+.stat-label { font-size: 12px; }
+.log-entry  { font-size: 12px; }
+.sdiv { font-size: 10px; }
+.big-score { font-size: 30px; }
+.s-val { font-size: 28px; }
+.infil-item { font-size: 12px; }
+
+/* ── 緊張度進度條升級 ────────────────────────────────────── */
+.tension-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.t-edge {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.t-peace { color: #44bb77; }
+.t-war   { color: #ff3322; }
+.tension-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 2px;
+}
+.t-lbl    { font-size: 11px; color: var(--txt2); }
+.t-status { font-size: 11px; font-weight: 700; color: var(--txt1); }
+
+/* ── 軍師卡片樣式 ─────────────────────────────────────────── */
+.adv-card {
+  border-radius: var(--r2);
+  border: 1px solid var(--bdr);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adv-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+.adv-real {
+  background: rgba(58,158,255,0.08);
+  border-color: rgba(58,158,255,0.25);
+}
+.adv-real:hover { background: rgba(58,158,255,0.16); }
+.adv-fake {
+  background: rgba(255,170,51,0.07);
+  border-color: rgba(255,170,51,0.2);
+}
+.adv-fake:hover { background: rgba(255,170,51,0.14); }
+.adv-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--txt0);
+}
+.adv-card-desc {
+  font-size: 12px;
+  color: var(--txt1);
+  line-height: 1.4;
+}
+
+/* Desktop 字體微調 */
+@media (min-width: 900px) {
+  html { font-size: 15px; }
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+  .card-nm { font-size: 13px; }
+}
