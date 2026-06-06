@@ -289,16 +289,27 @@ function showEventModal(event, onConfirm) {
 function checkGameOverUI() {
   if (!G.gameOver) return;
   const e = ENDINGS[G.gameOverId] || ENDINGS['war'];
+  const warning = drawWarning(G.gameOverId, e.winner);
   const m = document.getElementById('go-modal');
+
   document.getElementById('go-icon').textContent     = e.icon;
   document.getElementById('go-title').textContent    = e.title;
   document.getElementById('go-headline').textContent = e.headline;
   document.getElementById('go-desc').textContent     = e.desc;
-  document.getElementById('go-flavor').textContent   = e.flavor;
   document.getElementById('go-stats').innerHTML =
-    `臺灣 <strong style="color:#3a9eff">${Math.round(G.tw.score)}</strong>
-     中共 <strong style="color:#e84040">${Math.round(G.ccp.score)}</strong>
+    `臺灣 <strong style="color:#3a9eff">${Math.round(G.tw.score)}</strong>　
+     中共 <strong style="color:#e84040">${Math.round(G.ccp.score)}</strong>　
      ${G.turnsPlayed} 季 · ${G.year}年`;
+
+  // 警語區塊
+  const warnEl = document.getElementById('go-warning');
+  if (warnEl && warning) {
+    warnEl.innerHTML = `
+      <div class="go-warn-title">${warning.title}</div>
+      ${warning.lines.map(l => `<div class="go-warn-line">${l}</div>`).join('')}
+    `;
+  }
+
   m.style.setProperty('--go-bg', e.color || '#001430');
   m.classList.add('mopen');
 }
