@@ -41,21 +41,27 @@
 
       <!-- 左欄：玩家 -->
       <div id="left-panel" class="panel panel-tw-active">
-        <div class="p-title">
-          <span id="left-title">🇹🇼 臺灣</span>
-          <span class="ap-badge ap-tw" id="left-ap">AP 3</span>
+        <!-- 固定區：國力指標 -->
+        <div id="left-fixed">
+          <div class="p-title">
+            <span id="left-title">🇹🇼 臺灣</span>
+            <span class="ap-badge ap-tw" id="left-ap">AP 3</span>
+          </div>
+          <div class="sdiv">防禦指數</div>
+          <div class="big-score bs-tw" id="left-score">0</div>
+          <div class="sdiv">國力指標</div>
+          <div id="left-stats"></div>
+          <div id="left-infil" style="display:none">
+            <div class="sdiv">滲透狀態</div>
+            <div id="left-infil-track"></div>
+          </div>
         </div>
-        <div class="sdiv">防禦指數</div>
-        <div class="big-score bs-tw" id="left-score">0</div>
-        <div class="sdiv">國力指標</div>
-        <div id="left-stats"></div>
-        <div id="left-infil" style="display:none">
-          <div class="sdiv">滲透狀態</div>
-          <div id="left-infil-track"></div>
+        <!-- 滾動區：行動牌 -->
+        <div id="left-cards-wrap">
+          <div class="sdiv">行動牌</div>
+          <div class="tabs" id="left-tabs"></div>
+          <div id="left-cards" class="card-grid"></div>
         </div>
-        <div class="sdiv">行動牌</div>
-        <div class="tabs" id="left-tabs"></div>
-        <div id="left-cards" class="card-grid"></div>
       </div>
 
       <!-- 中欄 -->
@@ -77,6 +83,7 @@
             </div>
           </div>
           <button class="next-btn" onclick="nextQuarter()">▶ 推進下一季</button>
+          <button class="share-btn" onclick="shareGame()" title="分享遊戲">📤 分享</button>
         </div>
         <div id="log-wrap">
           <div class="log-hd">▌ 戰情日誌</div>
@@ -86,21 +93,27 @@
 
       <!-- 右欄：對手 -->
       <div id="right-panel" class="panel panel-ccp-side">
-        <div class="p-title">
-          <span id="right-title">🇨🇳 中共</span>
-          <span class="ap-badge ap-ccp" id="right-ap">AP ?</span>
+        <!-- 固定區：國力指標 -->
+        <div id="right-fixed">
+          <div class="p-title">
+            <span id="right-title">🇨🇳 中共</span>
+            <span class="ap-badge ap-ccp" id="right-ap">AP ?</span>
+          </div>
+          <div class="sdiv">威脅指數</div>
+          <div class="big-score bs-ccp" id="right-score">???</div>
+          <div class="sdiv">指標（情報決定可見度）</div>
+          <div id="right-stats"></div>
+          <div id="right-infil">
+            <div class="sdiv">滲透狀態</div>
+            <div id="right-infil-track"></div>
+          </div>
         </div>
-        <div class="sdiv">威脅指數</div>
-        <div class="big-score bs-ccp" id="right-score">???</div>
-        <div class="sdiv">指標（情報決定可見度）</div>
-        <div id="right-stats"></div>
-        <div id="right-infil">
-          <div class="sdiv">滲透狀態</div>
-          <div id="right-infil-track"></div>
+        <!-- 滾動區：對手行動牌 -->
+        <div id="right-cards-wrap">
+          <div class="sdiv">對手行動牌</div>
+          <div class="tabs" id="right-tabs"></div>
+          <div id="right-cards" class="card-grid"></div>
         </div>
-        <div class="sdiv">對手行動牌</div>
-        <div class="tabs" id="right-tabs"></div>
-        <div id="right-cards" class="card-grid"></div>
       </div>
 
     </div>
