@@ -28,20 +28,87 @@
     </div>
   </header>
 
-  <!-- Main -->
-  <div id="main">
+  <!-- ══ 手機版佈局 ══════════════════════════════════════ -->
+  <div id="mobile-layout">
 
-    <!-- 手機地圖 -->
+    <!-- 地圖 -->
     <div id="map-wrap"><div id="map-container"></div></div>
 
-    <div id="mode-bar"></div>
+    <!-- 陣營切換 Tab -->
+    <div id="mobile-faction-tabs">
+      <button class="mob-tab mob-tab-tw mob-tab-act" id="mob-tab-left" onclick="switchMobileFaction('left')">
+        🇹🇼 <span id="mob-tab-left-name">臺灣</span>
+        <span class="mob-tab-ap" id="mob-ap-left">AP 3</span>
+      </button>
+      <button class="mob-tab mob-tab-ccp" id="mob-tab-right" onclick="switchMobileFaction('right')">
+        🇨🇳 <span id="mob-tab-right-name">中共</span>
+        <span class="mob-tab-ap" id="mob-ap-right">AP ?</span>
+      </button>
+    </div>
 
-    <!-- 三欄 -->
+    <!-- 國力指標（固定，依選中陣營顯示）-->
+    <div id="mobile-stats-wrap">
+      <div id="mobile-stats-left" class="mob-stats-panel">
+        <div class="mob-score" id="mob-score-left">0</div>
+        <div id="mob-stats-left-content"></div>
+        <div id="mob-infil-left" style="display:none">
+          <div class="sdiv">滲透狀態</div>
+          <div id="mob-infil-left-track"></div>
+        </div>
+      </div>
+      <div id="mobile-stats-right" class="mob-stats-panel" style="display:none">
+        <div class="mob-score" id="mob-score-right">???</div>
+        <div id="mob-stats-right-content"></div>
+        <div id="mob-infil-right">
+          <div class="sdiv">滲透狀態</div>
+          <div id="mob-infil-right-track"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片區：左右滑動 -->
+    <div id="mobile-cards-wrap">
+      <div id="mobile-cards-header">
+        <div class="tabs" id="mob-card-tabs"></div>
+      </div>
+      <!-- 卡片滑動容器 -->
+      <div id="mob-cards-slider-wrap">
+        <div id="mob-cards-slider">
+          <!-- 由 JS 填入卡片 -->
+        </div>
+      </div>
+      <!-- 滑動指示點 -->
+      <div id="mob-card-dots"></div>
+    </div>
+
+    <!-- 分數 + 按鈕 -->
+    <div id="mobile-action-bar">
+      <div class="mob-scores">
+        <span class="mob-s-tw">🇹🇼 <strong id="mob-score-tw">0</strong></span>
+        <span class="mob-s-lead" id="mob-score-lead">—</span>
+        <span class="mob-s-ccp">🇨🇳 <strong id="mob-score-ccp">0</strong></span>
+      </div>
+      <div class="mob-btns">
+        <button class="next-btn" onclick="nextQuarter()">▶ 推進下一季</button>
+        <button class="share-btn" onclick="shareGame()">📤</button>
+      </div>
+    </div>
+
+    <!-- 日誌 -->
+    <div id="mobile-log">
+      <div class="log-hd">▌ 戰情日誌</div>
+      <div id="mobile-log-entries"></div>
+    </div>
+
+  </div><!-- /#mobile-layout -->
+
+  <!-- ══ 桌機版佈局 ══════════════════════════════════════ -->
+  <div id="main">
+    <div id="mode-bar"></div>
     <div id="panels">
 
       <!-- 左欄：玩家 -->
       <div id="left-panel" class="panel panel-tw-active">
-        <!-- 固定區：國力指標 -->
         <div id="left-fixed">
           <div class="p-title">
             <span id="left-title">🇹🇼 臺灣</span>
@@ -56,7 +123,6 @@
             <div id="left-infil-track"></div>
           </div>
         </div>
-        <!-- 滾動區：行動牌 -->
         <div id="left-cards-wrap">
           <div class="sdiv">行動牌</div>
           <div class="tabs" id="left-tabs"></div>
@@ -82,8 +148,10 @@
               <div class="s-val s-ccp" id="score-ccp">0</div>
             </div>
           </div>
-          <button class="next-btn" onclick="nextQuarter()">▶ 推進下一季</button>
-          <button class="share-btn" onclick="shareGame()" title="分享遊戲">📤 分享</button>
+          <div style="display:flex;gap:8px;">
+            <button class="next-btn" onclick="nextQuarter()">▶ 推進下一季</button>
+            <button class="share-btn" onclick="shareGame()">📤 分享</button>
+          </div>
         </div>
         <div id="log-wrap">
           <div class="log-hd">▌ 戰情日誌</div>
@@ -93,7 +161,6 @@
 
       <!-- 右欄：對手 -->
       <div id="right-panel" class="panel panel-ccp-side">
-        <!-- 固定區：國力指標 -->
         <div id="right-fixed">
           <div class="p-title">
             <span id="right-title">🇨🇳 中共</span>
@@ -108,7 +175,6 @@
             <div id="right-infil-track"></div>
           </div>
         </div>
-        <!-- 滾動區：對手行動牌 -->
         <div id="right-cards-wrap">
           <div class="sdiv">對手行動牌</div>
           <div class="tabs" id="right-tabs"></div>
@@ -117,8 +183,9 @@
       </div>
 
     </div>
-  </div>
-</div>
+  </div><!-- /#main -->
+
+</div><!-- /#app -->
 
 <!-- 大卡彈出 -->
 <div class="overlay" id="card-detail-overlay" onclick="if(event.target===this)window.closeCardDetail()">
@@ -176,14 +243,10 @@
 <!-- 建議彈窗 -->
 <div class="overlay" id="advisor-modal">
   <div class="mbox adv-mbox">
-
-    <!-- 標頭 -->
     <div class="adv-header">
       <span class="adv-header-tag" id="adv-header-label">本季收到建議</span>
       <span class="adv-type-badge" id="adv-type"></span>
     </div>
-
-    <!-- 建議者身份 -->
     <div class="adv-identity">
       <span class="adv-avatar" id="adv-avatar">👤</span>
       <div class="adv-identity-text">
@@ -191,17 +254,10 @@
         <div class="adv-fullname" id="adv-fullname"></div>
       </div>
     </div>
-
-    <!-- 第一行：大方向（聽起來很對）-->
     <div class="adv-tagline" id="adv-tagline"></div>
-
-    <!-- 第二行：真實台詞 -->
     <div class="adv-intro" id="adv-intro"></div>
-
-    <!-- 建議方案 -->
     <div class="adv-choices-label">建議方案（選一個）：</div>
     <div id="adv-choices" class="adv-choices-grid"></div>
-
     <button class="adv-skip-btn" onclick="skipAdvisor()">略過，不採納任何建議</button>
   </div>
 </div>
