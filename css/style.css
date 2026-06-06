@@ -490,3 +490,59 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
   .adv-mbox { max-width: 100%; }
   .adv-tagline { font-size: 13px; }
 }
+
+/* ── 遊戲結束彈窗 ────────────────────────────────────────── */
+.go-mbox { max-width: 480px; }
+#go-modal .mbox { background: var(--go-bg, #001430); border-color: rgba(255,255,255,0.1); }
+
+.go-icon-wrap { font-size: 54px; text-align: center; line-height: 1; }
+.go-title {
+  font-size: 24px; font-weight: 700; text-align: center;
+  color: var(--txt0); letter-spacing: 1px;
+}
+.go-headline {
+  font-size: 14px; font-weight: 600; text-align: center;
+  color: var(--txt1); line-height: 1.5;
+}
+.go-desc {
+  font-size: 13px; color: var(--txt1);
+  text-align: center; line-height: 1.75;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.go-stats {
+  font-size: 12px; color: var(--txt2);
+  text-align: center; line-height: 2;
+}
+
+/* 警語區塊 */
+.go-warning {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r2);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.go-warn-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--txt0); margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.go-warn-line {
+  font-size: 13px; color: var(--txt1);
+  line-height: 1.65;
+  padding-left: 10px;
+  border-left: 2px solid rgba(255,255,255,0.15);
+}
+/* 台灣勝：警語邊框藍色 */
+#go-modal[style*="001"] .go-warning { border-color: rgba(58,158,255,0.2); }
+#go-modal[style*="001"] .go-warn-line { border-left-color: rgba(58,158,255,0.3); }
+/* 中共勝：警語邊框紅色 */
+#go-modal[style*="15"] .go-warning,
+#go-modal[style*="18"] .go-warning,
+#go-modal[style*="14"] .go-warning { border-color: rgba(232,64,64,0.2); }
+#go-modal[style*="15"] .go-warn-line,
+#go-modal[style*="18"] .go-warn-line,
+#go-modal[style*="14"] .go-warn-line { border-left-color: rgba(232,64,64,0.25); }
