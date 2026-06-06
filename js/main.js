@@ -288,7 +288,7 @@ function showEventModal(event, onConfirm) {
 function checkGameOverUI() {
   if (!G.gameOver) return;
   const e = ENDINGS[G.gameOverId] || ENDINGS['war'];
-  const warning = drawWarning(G.gameOverId, e.winner);
+  const warning = drawWarning(G.gameOverId, e.winner, G.playerFaction);
   const m = document.getElementById('go-modal');
 
   document.getElementById('go-icon').textContent     = e.icon;
