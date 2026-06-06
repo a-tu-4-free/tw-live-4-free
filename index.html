@@ -2,68 +2,65 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>臺灣不沉 — 兩岸戰略對決</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
 <div id="app">
 
   <!-- Header -->
   <header id="header">
     <div class="hdr-row">
       <span class="game-title">🗺 臺灣不沉</span>
-      <div class="hdr-right">
-        <span class="yr-badge" id="hdr-year">2026 Q1</span>
-      </div>
+      <span class="yr-badge" id="hdr-year">2026 Q1</span>
     </div>
     <div class="tension-row">
       <span class="t-edge t-peace">和緩😴</span>
-      <div class="t-bg"><div id="tension-fill" style="width:40%;background:#44bb77"></div></div>
+      <div class="t-bg"><div id="tension-fill" style="width:52%;background:#ffaa33"></div></div>
       <span class="t-edge t-war">開戰💥</span>
     </div>
     <div class="tension-status-row">
       <span class="t-lbl">兩岸緊張</span>
-      <span class="t-status"><span id="tension-lbl">穩定</span> <span id="tension-num">40</span></span>
+      <span class="t-status"><span id="tension-lbl">緊張</span> <span id="tension-num">52</span></span>
     </div>
   </header>
 
   <!-- Main -->
   <div id="main">
 
-    <!-- 手機地圖（桌機隱藏） -->
+    <!-- 手機地圖 -->
     <div id="map-wrap"><div id="map-container"></div></div>
 
-    <!-- mode bar -->
     <div id="mode-bar"></div>
 
-    <!-- Panels row -->
+    <!-- 三欄 -->
     <div id="panels">
 
-      <!-- 左欄：台灣 -->
-      <div id="tw-panel" class="panel" style="position:relative">
-        <div id="tw-lock-msg" class="lock-msg tw-lock" style="display:none">等待台灣玩家行動</div>
-        <div class="p-title ptw">
-          🇹🇼 臺灣
-          <span class="ap-badge ap-tw">AP <span id="tw-ap">3</span></span>
+      <!-- 左欄：玩家 -->
+      <div id="left-panel" class="panel panel-tw-active">
+        <div class="p-title">
+          <span id="left-title">🇹🇼 臺灣</span>
+          <span class="ap-badge ap-tw" id="left-ap">AP 3</span>
         </div>
         <div class="sdiv">防禦指數</div>
-        <div class="big-score bs-tw" id="tw-score">0</div>
+        <div class="big-score bs-tw" id="left-score">0</div>
         <div class="sdiv">國力指標</div>
-        <div id="tw-stats"></div>
+        <div id="left-stats"></div>
+        <div id="left-infil" style="display:none">
+          <div class="sdiv">滲透狀態</div>
+          <div id="left-infil-track"></div>
+        </div>
         <div class="sdiv">行動牌</div>
-        <div class="tabs" id="tw-tabs"></div>
-        <div id="tw-cards" class="card-grid"></div>
+        <div class="tabs" id="left-tabs"></div>
+        <div id="left-cards" class="card-grid"></div>
       </div>
 
       <!-- 中欄 -->
       <div id="center-col-wrap">
-        <!-- 桌機地圖 -->
         <div id="map-wrap-desktop"><div id="map-container-desktop"></div></div>
-
         <div id="center-col">
           <div class="score-row">
             <div class="score-box">
@@ -81,55 +78,61 @@
           </div>
           <button class="next-btn" onclick="nextQuarter()">▶ 推進下一季</button>
         </div>
-
         <div id="log-wrap">
           <div class="log-hd">▌ 戰情日誌</div>
           <div id="log-entries"></div>
         </div>
       </div>
 
-      <!-- 右欄：中共 -->
-      <div id="ccp-panel" class="panel" style="position:relative">
-        <div id="ccp-lock-msg" class="lock-msg ccp-lock" style="display:none">等待中共玩家行動</div>
-        <div class="p-title pccp">
-          🇨🇳 中共
-          <span class="ap-badge ap-ccp">AP <span id="ccp-ap">3</span></span>
+      <!-- 右欄：對手 -->
+      <div id="right-panel" class="panel panel-ccp-side">
+        <div class="p-title">
+          <span id="right-title">🇨🇳 中共</span>
+          <span class="ap-badge ap-ccp" id="right-ap">AP ?</span>
         </div>
         <div class="sdiv">威脅指數</div>
-        <div class="big-score bs-ccp" id="ccp-score">0</div>
-        <div class="sdiv">威脅指標</div>
-        <div id="ccp-stats"></div>
-        <div class="sdiv">滲透狀態</div>
-        <div id="infil-track"></div>
-        <div class="sdiv">行動牌</div>
-        <div class="tabs" id="ccp-tabs"></div>
-        <div id="ccp-cards" class="card-grid"></div>
+        <div class="big-score bs-ccp" id="right-score">???</div>
+        <div class="sdiv">指標（情報決定可見度）</div>
+        <div id="right-stats"></div>
+        <div id="right-infil">
+          <div class="sdiv">滲透狀態</div>
+          <div id="right-infil-track"></div>
+        </div>
+        <div class="sdiv">對手行動牌</div>
+        <div class="tabs" id="right-tabs"></div>
+        <div id="right-cards" class="card-grid"></div>
       </div>
 
-    </div><!-- /#panels -->
+    </div>
+  </div>
+</div>
 
-  </div><!-- /#main -->
+<!-- 大卡彈出 -->
+<div class="overlay" id="card-detail-overlay" onclick="if(event.target===this)window.closeCardDetail()">
+  <div id="card-detail-content"></div>
+</div>
 
-</div><!-- /#app -->
-
-<!-- 開始畫面 -->
+<!-- 陣營選擇 -->
 <div class="overlay mopen" id="mode-modal">
-  <div class="mbox" style="text-align:center;gap:16px;">
-    <div style="font-size:48px;">🗺</div>
+  <div class="mbox" style="max-width:400px;text-align:center;gap:18px;">
+    <div style="font-size:52px;">🗺</div>
     <div style="font-size:20px;font-weight:700;color:var(--chip);">臺灣不沉</div>
-    <div style="font-size:13px;color:var(--txt1);line-height:1.7;">
-      你是臺灣的決策者。<br>
-      中共每季自動出招，隨機且不講情面。<br>
-      守住現狀，或被蠶食鯨吞——沒有第三條路。
+    <div style="font-size:13px;color:var(--txt1);line-height:1.8;">
+      選擇你要扮演的陣營。<br>
+      對方的卡牌一開始全部隱藏。<br>
+      情報值越高，看到越多。
     </div>
-    <div style="font-size:11px;color:var(--txt2);padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7;">
-      台灣不是不能輸，而是輸不起。<br>
-      你準備好了嗎？
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="mode-btn mode-btn-ai" onclick="startMode('tw')">
+        🇹🇼 扮演臺灣
+        <div class="mode-btn-sub">守住民主，對抗滲透與軍事壓力</div>
+      </button>
+      <button class="mode-btn mode-btn-2p" onclick="startMode('ccp')">
+        🇨🇳 扮演中共
+        <div class="mode-btn-sub">滲透、施壓、認知作戰——不戰而屈人之兵</div>
+      </button>
     </div>
-    <button class="mode-btn mode-btn-ai" onclick="startMode()" style="text-align:center;">
-      ▶ 開始遊戲
-      <div class="mode-btn-sub">單機對抗 — 中共由AI控制</div>
-    </button>
+    <div style="font-size:11px;color:var(--txt2);">兩種視角，同一場博弈。</div>
   </div>
 </div>
 
@@ -137,23 +140,23 @@
 <div class="overlay" id="ev-modal">
   <div class="mbox">
     <div class="ev-tag">⚡ 本季事件</div>
-    <div id="ev-title"></div>
-    <div id="ev-body"></div>
-    <div id="ev-efx"></div>
+    <div id="ev-title" style="font-size:16px;font-weight:700;"></div>
+    <div id="ev-body" style="font-size:13px;color:var(--txt1);line-height:1.7;"></div>
+    <div id="ev-efx" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
     <button class="ev-ok" id="ev-ok">確認並繼續 →</button>
   </div>
 </div>
 
 <!-- 遊戲結束 -->
-<div class="overlay" id="go-modal">
-  <div class="mbox">
-    <div class="go-icon" id="go-icon">🏁</div>
-    <div id="go-title">遊戲結束</div>
-    <div id="go-headline"></div>
-    <div id="go-desc"></div>
-    <div id="go-flavor"></div>
-    <div id="go-stats"></div>
-    <button class="restart-btn" onclick="restartGame()">↺ 重新開始</button>
+<div class="overlay" id="go-modal" style="--go-bg:#001430;">
+  <div class="mbox" style="background:var(--go-bg);">
+    <div style="font-size:52px;text-align:center;" id="go-icon">🏁</div>
+    <div style="font-size:22px;font-weight:700;text-align:center;" id="go-title"></div>
+    <div style="font-size:14px;font-weight:700;text-align:center;color:var(--txt1);" id="go-headline"></div>
+    <div style="font-size:13px;color:var(--txt1);text-align:center;line-height:1.7;" id="go-desc"></div>
+    <div style="font-size:12px;color:var(--txt2);text-align:center;font-style:italic;border-top:1px solid var(--bdr);padding-top:8px;" id="go-flavor"></div>
+    <div style="font-size:12px;color:var(--txt2);text-align:center;line-height:2;" id="go-stats"></div>
+    <button class="restart-btn" onclick="restartGame()">↺ 換個陣營再玩</button>
   </div>
 </div>
 
@@ -161,17 +164,19 @@
 <div class="overlay" id="advisor-modal">
   <div class="mbox" style="max-width:480px;">
     <div style="display:flex;align-items:center;gap:12px;">
-      <span style="font-size:40px;" id="adv-avatar">👤</span>
+      <span style="font-size:44px;" id="adv-avatar">👤</span>
       <div>
-        <div style="font-size:16px;font-weight:700;" id="adv-name">軍師</div>
+        <div style="font-size:17px;font-weight:700;" id="adv-name"></div>
         <div style="font-size:11px;color:var(--txt2);" id="adv-fullname"></div>
-        <div style="font-size:11px;font-weight:600;margin-top:2px;" id="adv-type"></div>
+        <div style="font-size:11px;font-weight:600;margin-top:3px;" id="adv-type"></div>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--txt1);line-height:1.7;font-style:italic;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;" id="adv-intro"></div>
-    <div style="font-size:11px;color:var(--txt2);">選擇一個建議，或忽略：</div>
+    <div style="font-size:12px;color:var(--txt1);line-height:1.7;font-style:italic;
+         padding:10px;background:rgba(255,255,255,0.04);border-radius:6px;" id="adv-intro"></div>
+    <div style="font-size:11px;color:var(--txt2);">選一個建議，或略過：</div>
     <div id="adv-choices" style="display:flex;flex-direction:column;gap:8px;"></div>
-    <button class="ev-ok" style="background:rgba(255,255,255,0.06);color:var(--txt1);border-color:var(--bdr);" onclick="skipAdvisor()">略過，不採納任何建議</button>
+    <button class="ev-ok" style="background:rgba(255,255,255,0.05);color:var(--txt1);
+            border-color:var(--bdr);" onclick="skipAdvisor()">略過，不採納任何建議</button>
   </div>
 </div>
 
@@ -188,8 +193,5 @@
 <script src="js/map.js"></script>
 <script src="js/render.js"></script>
 <script src="js/main.js"></script>
-
-<!-- scripts loaded via js/main.js patch -->
-
 </body>
 </html>

@@ -2,57 +2,46 @@
 // game.js — 遊戲狀態、核心邏輯、結局系統
 // ============================================================
 
-function createInitialState(mode) {
-  // ── 2026年真實情勢評估 ──────────────────────────────────
-  // 臺灣：
-  //   軍事58  — 國防預算佔GDP約2.4%，後備改革仍不足，F-16升級中，自製潛艦剛下水
-  //   經濟82  — 半導體出口強勁但內需不振，通膨壓力，貿易高度依賴中美
-  //   晶片92  — 台積電2nm量產，全球先進製程市佔超70%，矽盾地位穩固
-  //   外交48  — 邦交國僅剩12個，WHO持續被拒，但非正式關係持續深化
-  //   士氣62  — 部分民眾仍存有「打不過就算了」心態，但主流民意支持防衛
-  //   情報55  — 多起共諜案曝光，反情報能力仍有漏洞
-  //   韌性50  — 能源高度依賴進口，民防意識薄弱，防空洞多數老舊
-  //   軟實力65 — 民主典範、防疫成績、文化輸出有一定能量
-  //
-  // 中共：
-  //   軍事88  — 解放軍現代化快速推進，火箭軍飛彈覆蓋全台，但貪腐問題嚴重
-  //   網軍78  — APT41等組織長期滲透，基礎設施攻擊能力強
-  //   宣傳72  — 認知作戰滲透台灣媒體、社群，但可信度下滑
-  //   外交65  — 一帶一路影響力廣，但西方圍堵加劇，俄烏戰後形象受損
-  //   經濟58  — 恆大爆雷、房地產危機、青年失業率高，內需疲軟
-  //   滲透48  — 多條滲透線已布建，退將、媒體、政界均有觸角
+function createInitialState(playerFaction) {
+  // playerFaction: 'tw' | 'ccp'
   return {
     year: 2026, quarter: 1,
-    tension: 52,  // 2026年台海緊張度偏高，ADIZ侵擾常態化
+    tension: 52,
     gameOver: false, gameOverId: null, winner: null,
-    phase: 'action',
-    mode: mode || 'vs_ai',
-    activeFaction: 'tw',
+    playerFaction: playerFaction || 'tw',
     thisQuarterLog: [],
     mapEvents: [],
+
     tw: {
       ap: 3, maxAp: 3,
-      military:   58,  // 國防改革中，仍有明顯缺口
-      economy:    82,  // 出口強但結構脆弱
-      chip:       92,  // 唯一全球性優勢，矽盾核心
-      diplomacy:  48,  // 邦交國稀少，國際空間狹窄
-      morale:     62,  // 民心支持但「反正有美國」心態普遍
-      intel:      55,  // 反情報有進步但漏洞仍多
-      resilience: 50,  // 民防薄弱，能源脆弱
-      softpower:  65,  // 民主、防疫、文化有一定能量
-      score: 0, cooldowns: {}, infiltrationCleared: 0,
-      usedCards: [],
+      military:   58,
+      economy:    82,
+      chip:       92,
+      diplomacy:  48,
+      morale:     62,
+      intel:      55,
+      resilience: 50,
+      softpower:  65,
+      score: 0,
+      cooldowns: {},
+      infiltrationCleared: 0,
+      usedCards: [],   // 本局出過的牌id
+      revealedCards: [], // 對方已看到的牌id
     },
+
     ccp: {
       ap: 3, maxAp: 3,
-      military:    88,  // 解放軍現代化先進，但腐敗侵蝕戰力
-      economy:     58,  // 房地產危機+青年失業，內部壓力大
-      cyber:       78,  // 網路攻擊能力強，長期滲透台灣基設
-      propaganda:  72,  // 認知作戰佈局深，但可信度下滑中
-      diplomacy:   65,  // 一帶一路廣但西方圍堵加劇
-      infiltration:48,  // 已布建多條線，退將/媒體/政界均有
-      intel:       60,
-      score: 0, cooldowns: {},
+      military:   88,
+      economy:    58,
+      tech:       65,   // 對應台灣晶片
+      diplomacy:  65,
+      loyalty:    72,   // 黨心（對應士氣）
+      intel:      60,
+      stability:  68,   // 維穩（對應韌性）
+      narrative:  72,   // 話語權（對應軟實力）
+      score: 0,
+      cooldowns: {},
+      infiltration: 48,
       infiltrated: {
         retired_officers: false,
         legislators:      false,
@@ -60,7 +49,9 @@ function createInitialState(mode) {
         students:         false,
       },
       usedCards: [],
+      revealedCards: [],
     },
+
     log: [], eventHistory: [], turnsPlayed: 0,
   };
 }
@@ -71,10 +62,22 @@ function clamp(val, min = 0, max = 100) {
 }
 
 // ── 套用效果 ─────────────────────────────────────────────
+// 欄位別名：舊卡牌用的名字 → 新欄位名
+const STAT_ALIAS = {
+  propaganda: 'narrative',  // 中共宣傳 → 話語權
+  cyber: 'tech',            // 中共網軍計入科技
+};
+
 function applyEffects(state, effects) {
   if (!effects) return state;
   const s = deepClone(state);
-  for (const [key, delta] of Object.entries(effects)) {
+  for (let [key, delta] of Object.entries(effects)) {
+    // 別名對應
+    if (key.startsWith('ccp_') && STAT_ALIAS[key.slice(4)]) {
+      key = 'ccp_' + STAT_ALIAS[key.slice(4)];
+    } else if (STAT_ALIAS[key] && s.ccp[key] === undefined) {
+      key = STAT_ALIAS[key];
+    }
     if (key === 'tension') {
       s.tension = clamp(s.tension + delta, 0, 100);
     } else if (key.startsWith('tw_')) {
@@ -97,7 +100,9 @@ function playTaiwanCard(state, cardId) {
   const card = getAllTaiwanCards().find(c => c.id === cardId);
   if (!card) return { state, error: '找不到卡牌' };
   if (state.tw.ap < card.cost) return { state, error: '行動點不足' };
-  if ((state.tw.cooldowns[cardId] || 0) > 0) return { state, error: `冷卻中，還需 ${state.tw.cooldowns[cardId]} 季` };
+  if ((state.tw.cooldowns[cardId] || 0) > 0)
+    return { state, error: `冷卻中，還需 ${state.tw.cooldowns[cardId]} 季` };
+
   let s = deepClone(state);
   s.tw.ap -= card.cost;
   s = applyEffects(s, card.effects);
@@ -105,11 +110,21 @@ function playTaiwanCard(state, cardId) {
   if (card.cooldown) s.tw.cooldowns[cardId] = card.cooldown;
   if (card.special === 'counter_infiltration') s = doCounterIntel(s);
   if (!s.tw.usedCards.includes(cardId)) s.tw.usedCards.push(cardId);
-  const entry = { faction: 'tw', text: `▶ ${card.name}：${card.desc}`, quarter: `${s.year}Q${s.quarter}` };
-  s.thisQuarterLog.push(entry); s.log.unshift(entry);
-  // 地圖事件
+
+  // 對方揭露：台灣出牌後對方知道這張牌
+  if (!s.ccp.revealedCards.includes(cardId)) s.ccp.revealedCards.push(cardId);
+
+  const entry = {
+    faction: 'tw',
+    text: `▶ ${card.name}：${card.desc}`,
+    quarter: `${s.year}Q${s.quarter}`
+  };
+  s.thisQuarterLog.push(entry);
+  s.log.unshift(entry);
+
   if (card.category === '軍事') s.mapEvents.push({ type: 'tw_military', label: card.name, life: 3 });
   if (card.category === '外交') s.mapEvents.push({ type: 'tw_diplo', label: card.name, life: 2 });
+
   return { state: s, triggersCCP: card.triggersCCP };
 }
 
@@ -118,21 +133,35 @@ function playCCPCard(state, cardId) {
   const card = getAllCCPCards().find(c => c.id === cardId);
   if (!card) return { state, error: '找不到卡牌' };
   if (state.ccp.ap < card.cost) return { state, error: '行動點不足' };
-  if ((state.ccp.cooldowns[cardId] || 0) > 0) return { state, error: `冷卻中，還需 ${state.ccp.cooldowns[cardId]} 季` };
+  if ((state.ccp.cooldowns[cardId] || 0) > 0)
+    return { state, error: `冷卻中，還需 ${state.ccp.cooldowns[cardId]} 季` };
+
   let s = deepClone(state);
   s.ccp.ap -= card.cost;
   s = applyEffects(s, card.effects);
   if (card.sideEffects) s = applyEffects(s, card.sideEffects);
   if (card.cooldown) s.ccp.cooldowns[cardId] = card.cooldown;
+
   if (card.special && card.special.startsWith('infiltrate_')) {
     s.ccp.infiltrated[card.special.replace('infiltrate_', '')] = true;
   }
   if (!s.ccp.usedCards.includes(cardId)) s.ccp.usedCards.push(cardId);
-  const entry = { faction: 'ccp', text: `▶ ${card.name}：${card.desc}`, quarter: `${s.year}Q${s.quarter}` };
-  s.thisQuarterLog.push(entry); s.log.unshift(entry);
+
+  // 對方揭露
+  if (!s.tw.revealedCards.includes(cardId)) s.tw.revealedCards.push(cardId);
+
+  const entry = {
+    faction: 'ccp',
+    text: `▶ ${card.name}：${card.desc}`,
+    quarter: `${s.year}Q${s.quarter}`
+  };
+  s.thisQuarterLog.push(entry);
+  s.log.unshift(entry);
+
   if (card.category === '軍事') s.mapEvents.push({ type: 'ccp_military', label: card.name, life: 3 });
   if (card.category === '滲透') s.mapEvents.push({ type: 'ccp_infiltrate', label: card.name, life: 2 });
   if (card.category === '網路') s.mapEvents.push({ type: 'ccp_cyber', label: card.name, life: 2 });
+
   return { state: s, triggersTW: card.triggersTW };
 }
 
@@ -142,19 +171,73 @@ function doCounterIntel(state) {
   let cleared = 0;
   for (const key of Object.keys(s.ccp.infiltrated)) {
     if (s.ccp.infiltrated[key] && Math.random() > 0.45) {
-      s.ccp.infiltrated[key] = false; cleared++;
+      s.ccp.infiltrated[key] = false;
+      cleared++;
     }
   }
   s.tw.infiltrationCleared += cleared;
   s.ccp.infiltration = clamp(s.ccp.infiltration - cleared * 10);
-  const entry = { faction: 'tw',
-    text: cleared > 0 ? `✓ 反情報成功，清除 ${cleared} 條滲透線` : '✗ 反情報行動暫未奏效',
-    quarter: `${s.year}Q${s.quarter}` };
-  s.thisQuarterLog.push(entry); s.log.unshift(entry);
+  const entry = {
+    faction: 'tw',
+    text: cleared > 0
+      ? `✓ 反情報成功，清除 ${cleared} 條滲透線`
+      : '✗ 反情報行動暫未奏效',
+    quarter: `${s.year}Q${s.quarter}`
+  };
+  s.thisQuarterLog.push(entry);
+  s.log.unshift(entry);
   return s;
 }
 
-// ── 中共AI出牌 ───────────────────────────────────────────
+// ── 對方數值可見度（情報決定）────────────────────────────
+// 回傳：{ stat: 真實值 或 null(不可見) }
+function getVisibleOpponentStats(state, myFaction) {
+  const intel = myFaction === 'tw' ? state.tw.intel : state.ccp.intel;
+  const opponent = myFaction === 'tw' ? state.ccp : state.tw;
+
+  // 情報越高看越多
+  // < 40: 全部???
+  // 40-60: 顯示軍事、經濟（2項）
+  // 60-75: 顯示4項
+  // > 75: 顯示全部
+  const allStats = myFaction === 'tw'
+    ? ['military','economy','tech','diplomacy','loyalty','intel','stability','narrative']
+    : ['military','economy','chip','diplomacy','morale','intel','resilience','softpower'];
+
+  const visibleCount = intel < 40 ? 0
+    : intel < 60 ? 2
+    : intel < 75 ? 4
+    : allStats.length;
+
+  const result = {};
+  allStats.forEach((stat, i) => {
+    result[stat] = i < visibleCount ? opponent[stat] : null;
+  });
+  return result;
+}
+
+// ── AI：台灣自動出牌 ─────────────────────────────────────
+function autoTWTurn(state) {
+  let s = deepClone(state);
+  let iterations = 0;
+  while (s.tw.ap > 0 && iterations < 8) {
+    iterations++;
+    const available = getAllTaiwanCards().filter(c => isTWCardAvailable(s, c.id));
+    if (available.length === 0) break;
+    // AI策略：優先防禦性牌
+    let pool = available.filter(c =>
+      ['社會','情報','軍事'].includes(c.category)
+    );
+    if (pool.length === 0) pool = available;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const result = playTaiwanCard(s, pick.id);
+    if (!result.error) s = result.state;
+    else break;
+  }
+  return s;
+}
+
+// ── AI：中共自動出牌 ─────────────────────────────────────
 function autoCCPTurn(state) {
   let s = deepClone(state);
   let iterations = 0;
@@ -162,7 +245,6 @@ function autoCCPTurn(state) {
     iterations++;
     const available = getAllCCPCards().filter(c => isCCPCardAvailable(s, c.id));
     if (available.length === 0) break;
-    // 策略：緊張低時優先滲透，緊張高時優先軍事
     let pool;
     if (s.tension < 50) {
       pool = available.filter(c => ['滲透','認知','經濟'].includes(c.category));
@@ -181,282 +263,219 @@ function autoCCPTurn(state) {
 // ── 季末結算 ─────────────────────────────────────────────
 function resolveEndOfQuarter(state, event) {
   let s = deepClone(state);
+
   if (event) {
     s = applyEffects(s, event.effects);
-    s.eventHistory.push({ id: event.id, title: event.title, quarter: `${s.year}Q${s.quarter}` });
-    s.log.unshift({ faction: 'event', text: `⚡ ${event.title}`, quarter: `${s.year}Q${s.quarter}` });
+    s.eventHistory.push({
+      id: event.id, title: event.title,
+      quarter: `${s.year}Q${s.quarter}`
+    });
+    s.log.unshift({
+      faction: 'event',
+      text: `⚡ ${event.title}`,
+      quarter: `${s.year}Q${s.quarter}`
+    });
   }
+
   // 滲透持續傷害
   const activeInfil = Object.values(s.ccp.infiltrated).filter(Boolean).length;
   if (activeInfil > 0) {
-    s.tw.military  = clamp(s.tw.military  - activeInfil * 2);
-    s.tw.intel     = clamp(s.tw.intel     - activeInfil * 2);
-    s.tw.morale    = clamp(s.tw.morale    - activeInfil * 1);
+    s.tw.military   = clamp(s.tw.military   - activeInfil * 2);
+    s.tw.intel      = clamp(s.tw.intel      - activeInfil * 2);
+    s.tw.morale     = clamp(s.tw.morale     - activeInfil * 1);
     s.ccp.infiltration = clamp(s.ccp.infiltration + activeInfil * 3);
   }
-  // 宣傳持續傷害
-  if (s.ccp.propaganda > 70) {
+
+  // 宣傳傷害
+  if (s.ccp.narrative > 70) {
     s.tw.morale     = clamp(s.tw.morale     - 3);
     s.tw.resilience = clamp(s.tw.resilience - 2);
   }
-  // 晶片優勢自然紅利
+
+  // 晶片紅利
   if (s.tw.chip > 85) {
     s.tw.diplomacy = clamp(s.tw.diplomacy + 1);
     s.tw.economy   = clamp(s.tw.economy   + 1);
   }
+
   // 緊張衰減
   const dipBonus = s.tw.diplomacy > 75 ? 3 : 1;
   s.tension = clamp(s.tension - dipBonus + (s.ccp.military > 88 ? 2 : 0));
-  // 地圖事件生命值遞減
-  s.mapEvents = s.mapEvents.map(e => ({ ...e, life: e.life - 1 })).filter(e => e.life > 0);
-  // 冷卻 -1
-  for (const k of Object.keys(s.tw.cooldowns)) s.tw.cooldowns[k] = Math.max(0, s.tw.cooldowns[k] - 1);
-  for (const k of Object.keys(s.ccp.cooldowns)) s.ccp.cooldowns[k] = Math.max(0, s.ccp.cooldowns[k] - 1);
-  // 中共隨時間升級（無限局核心）
-  s = applyCCPEscalation(s);
+
+  // 地圖事件老化
+  s.mapEvents = s.mapEvents
+    .map(e => ({ ...e, life: e.life - 1 }))
+    .filter(e => e.life > 0);
+
+  // 冷卻遞減
+  for (const k of Object.keys(s.tw.cooldowns))
+    s.tw.cooldowns[k] = Math.max(0, s.tw.cooldowns[k] - 1);
+  for (const k of Object.keys(s.ccp.cooldowns))
+    s.ccp.cooldowns[k] = Math.max(0, s.ccp.cooldowns[k] - 1);
 
   // 重置AP
-  s.tw.ap = s.tw.maxAp; s.ccp.ap = s.ccp.maxAp;
-  // two_player：重置到台灣回合
-  s.activeFaction = 'tw';
+  s.tw.ap  = s.tw.maxAp;
+  s.ccp.ap = s.ccp.maxAp;
+
+  // 中共動態升降
+  s = applyCCPEscalation(s);
+
   // 分數
   s.tw.score  = computeTWScore(s);
   s.ccp.score = computeCCPScore(s);
+
   // 推進時間
   s.turnsPlayed++;
-  s.quarter++; if (s.quarter > 4) { s.quarter = 1; s.year++; }
+  s.quarter++;
+  if (s.quarter > 4) { s.quarter = 1; s.year++; }
   s.thisQuarterLog = [];
+
   // 結局判定
   const ending = checkEnding(s);
-  if (ending) { s.gameOver = true; s.gameOverId = ending.id; s.winner = ending.winner; }
+  if (ending) {
+    s.gameOver     = true;
+    s.gameOverId   = ending.id;
+    s.winner       = ending.winner;
+  }
   return s;
 }
 
 // ── 分數計算 ─────────────────────────────────────────────
 function computeTWScore(s) {
   return Math.round(
-    s.tw.military * 0.18 + s.tw.economy * 0.13 + s.tw.chip * 0.18 +
-    s.tw.diplomacy * 0.16 + s.tw.morale * 0.12 + s.tw.intel * 0.11 +
-    s.tw.resilience * 0.07 + s.tw.softpower * 0.05
+    s.tw.military   * 0.18 +
+    s.tw.economy    * 0.13 +
+    s.tw.chip       * 0.18 +
+    s.tw.diplomacy  * 0.16 +
+    s.tw.morale     * 0.12 +
+    s.tw.intel      * 0.11 +
+    s.tw.resilience * 0.07 +
+    s.tw.softpower  * 0.05
   );
 }
+
 function computeCCPScore(s) {
   return Math.round(
-    s.ccp.military * 0.25 + s.ccp.cyber * 0.18 + s.ccp.propaganda * 0.15 +
-    s.ccp.diplomacy * 0.14 + s.ccp.economy * 0.14 + s.ccp.infiltration * 0.14
+    s.ccp.military   * 0.20 +
+    s.ccp.economy    * 0.12 +
+    s.ccp.tech       * 0.15 +
+    s.ccp.diplomacy  * 0.12 +
+    s.ccp.loyalty    * 0.12 +
+    s.ccp.intel      * 0.10 +
+    s.ccp.stability  * 0.10 +
+    s.ccp.narrative  * 0.09
   );
 }
 
-// ── 8種結局判定（無限模式：純靠數值，無季數下限）────────
-// 結局分三層：
-//   即時危機：任何時候都可能觸發（崩潰類）
-//   中期結局：需要數值長期積累才夠
-//   長線結局：需要多項條件同時達到高峰
-function checkEnding(s) {
-
-  // ── 即時危機（隨時都可觸發）────────────────────────────
-  // 戰爭爆發：緊張臨界
-  if (s.tension >= 95)
-    return { id: 'war', winner: 'crisis' };
-
-  // 內部瓦解：滲透全面得手 + 情報與士氣雙雙崩潰
-  if (s.ccp.infiltration >= 92 && s.tw.intel <= 15 && s.tw.morale <= 25)
-    return { id: 'collapse', winner: 'ccp' };
-
-  // 士氣崩潰：軍心渙散到無法組織抵抗
-  if (s.tw.morale <= 8 && s.tw.military <= 18)
-    return { id: 'morale_collapse', winner: 'ccp' };
-
-  // ── 中期結局（需要數值長期惡化/積累）───────────────────
-  // 經濟窒息：封鎖把台灣餓死，且外交也被孤立
-  if (s.tw.economy <= 12 && s.tw.diplomacy <= 30)
-    return { id: 'economic_siege', winner: 'ccp' };
-
-  // 認知戰勝利：宣傳機器全開 + 韌性被磨光 + 士氣低迷
-  if (s.ccp.propaganda >= 92 && s.tw.resilience <= 15 && s.tw.morale <= 35)
-    return { id: 'cognitive_victory', winner: 'ccp' };
-
-  // ── 長線勝利（需要多項指標同時達到高峰）────────────────
-  // 矽盾和平：晶片 + 外交 + 經濟三項全部高點
-  if (s.tw.chip >= 94 && s.tw.diplomacy >= 90 && s.tw.economy >= 85)
-    return { id: 'silicon_peace', winner: 'tw' };
-
-  // 外交勝利：外交 + 軟實力 + 士氣三項全部高點
-  if (s.tw.diplomacy >= 92 && s.tw.softpower >= 85 && s.tw.morale >= 80)
-    return { id: 'diplomatic_victory', winner: 'tw' };
-
-  // 軍事嚇阻：軍力壓倒 + 整體防禦指數大幅領先
-  if (s.tw.military >= 92 && s.tw.score >= 88 && s.ccp.score <= 48)
-    return { id: 'deterrence', winner: 'tw' };
-
-  // 長期穩定：緊張極低 + 韌性高 + 社會凝聚
-  if (s.tension <= 10 && s.tw.resilience >= 80 && s.tw.morale >= 75)
-    return { id: 'stable_status_quo', winner: 'tw' };
-
-  return null;
-}
-
-// ── 中共動態消長（無限局核心：會變強也會變弱）──────────
+// ── 中共動態消長 ─────────────────────────────────────────
 function applyCCPEscalation(state) {
   const s = deepClone(state);
-  const yearsIn = Math.floor(s.turnsPlayed / 4);
   const msgs = [];
 
-  // ── 自然成長（軍事現代化持續推進）──────────────────────
   s.ccp.military  = clamp(s.ccp.military  + 1,   0, 95);
-  s.ccp.cyber     = clamp(s.ccp.cyber     + 1,   0, 92);
+  s.ccp.intel     = clamp(s.ccp.intel     + 0.5, 0, 90);
   s.ccp.diplomacy = clamp(s.ccp.diplomacy + 0.5, 0, 90);
 
-  // ── 台灣反制造成的中共衰退 ──────────────────────────────
-
-  // 晶片封鎖：台灣晶片優勢高 → 技術脫鉤傷害中共經濟與研發
-  // 係數從 0.12 調降至 0.06，避免晶片路線過於壓制性（勝率從79%降至~65%）
+  // 台灣反制
   if (s.tw.chip > 85) {
     const hit = (s.tw.chip - 85) * 0.06;
     s.ccp.economy = clamp(s.ccp.economy - hit);
-    s.ccp.cyber   = clamp(s.ccp.cyber   - hit * 0.5);
+    s.ccp.tech    = clamp(s.ccp.tech    - hit * 0.5);
   }
-
-  // 外交孤立：台灣外交強 → 中共在國際被圍堵，影響力下滑
-  if (s.tw.diplomacy > 78) {
-    const hit = (s.tw.diplomacy - 78) * 0.1;
-    s.ccp.diplomacy = clamp(s.ccp.diplomacy - hit);
-  }
-
-  // 反情報成果：有清除滲透記錄 → 宣傳機器效率下降
-  if (s.tw.infiltrationCleared > 0) {
-    s.ccp.propaganda = clamp(s.ccp.propaganda - s.tw.infiltrationCleared * 0.4);
-  }
-
-  // 社會韌性：台灣韌性高 → 認知作戰邊際效益遞減
-  if (s.tw.resilience > 72) {
-    const hit = (s.tw.resilience - 72) * 0.08;
-    s.ccp.propaganda = clamp(s.ccp.propaganda - hit);
-  }
-
-  // 軟實力輸出：台灣軟實力高 → 中共敘事被稀釋
+  if (s.tw.diplomacy > 78)
+    s.ccp.diplomacy = clamp(s.ccp.diplomacy - (s.tw.diplomacy - 78) * 0.1);
+  if (s.tw.infiltrationCleared > 0)
+    s.ccp.narrative = clamp(s.ccp.narrative - s.tw.infiltrationCleared * 0.4);
+  if (s.tw.resilience > 72)
+    s.ccp.narrative = clamp(s.ccp.narrative - (s.tw.resilience - 72) * 0.08);
   if (s.tw.softpower > 65) {
-    s.ccp.propaganda = clamp(s.ccp.propaganda - 0.5);
+    s.ccp.narrative  = clamp(s.ccp.narrative  - 0.5);
     s.ccp.diplomacy  = clamp(s.ccp.diplomacy  - 0.3);
   }
 
-  // ── 中共內部壓力 ────────────────────────────────────────
-
-  // 經濟差 → 軍費難以為繼，軍事成長停滯甚至倒退
-  if (s.ccp.economy < 55) {
-    const drag = (55 - s.ccp.economy) * 0.08;
-    s.ccp.military = clamp(s.ccp.military - drag);
-  }
-
-  // 經濟崩潰 → 滲透網絡資金斷鏈
+  // 中共內部壓力
+  if (s.ccp.economy < 55)
+    s.ccp.military = clamp(s.ccp.military - (55 - s.ccp.economy) * 0.08);
   if (s.ccp.economy < 40) {
     s.ccp.infiltration = clamp(s.ccp.infiltration - 2);
     msgs.push('中共經濟惡化，滲透資金縮減');
   }
+  if (s.ccp.loyalty < 45)
+    s.ccp.military = clamp(s.ccp.military - 2);
 
-  // 外交孤立嚴重 → 國際影響力加速萎縮
-  if (s.ccp.diplomacy < 45) {
-    s.ccp.economy = clamp(s.ccp.economy - 1);
-  }
-
-  // ── 每8季大升級（但幅度受經濟狀況影響）────────────────
+  // 每8季升級
   if (s.turnsPlayed > 0 && s.turnsPlayed % 8 === 0) {
-    const rich  = s.ccp.economy > 65;
-    const milUp = rich ? 3 : 1;
-    const proUp = rich ? 3 : 1;
-    const infUp = rich ? 4 : 2;
-    s.ccp.military     = clamp(s.ccp.military     + milUp);
-    s.ccp.propaganda   = clamp(s.ccp.propaganda   + proUp);
-    s.ccp.infiltration = clamp(s.ccp.infiltration + infUp);
-    msgs.push(`中共完成第${yearsIn}年軍事升級${rich ? '' : '（經濟吃緊，幅度縮水）'}`);
+    const rich = s.ccp.economy > 65;
+    s.ccp.military     = clamp(s.ccp.military     + (rich ? 3 : 1));
+    s.ccp.narrative    = clamp(s.ccp.narrative    + (rich ? 3 : 1));
+    s.ccp.infiltration = clamp(s.ccp.infiltration + (rich ? 4 : 2));
+    msgs.push(`中共完成軍事升級${rich ? '' : '（經濟吃緊，幅度縮水）'}`);
   }
 
-  // ── 每12季危機週期 ───────────────────────────────────────
+  // 每12季危機
   if (s.turnsPlayed > 0 && s.turnsPlayed % 12 === 0) {
     s.tension = clamp(s.tension + 5);
     msgs.push('新一輪兩岸危機週期，緊張度上升');
   }
 
-  // 寫入日誌
-  for (const m of msgs) {
+  for (const m of msgs)
     s.log.unshift({ faction: 'event', text: `⚠️ ${m}`, quarter: `${s.year}Q${s.quarter}` });
-  }
 
   return s;
 }
 
+// ── 8種結局判定 ──────────────────────────────────────────
+function checkEnding(s) {
+  if (s.tension >= 95)
+    return { id: 'war', winner: 'crisis' };
+  if (s.ccp.infiltration >= 92 && s.tw.intel <= 15 && s.tw.morale <= 25)
+    return { id: 'collapse', winner: 'ccp' };
+  if (s.tw.morale <= 8 && s.tw.military <= 18)
+    return { id: 'morale_collapse', winner: 'ccp' };
+  if (s.tw.economy <= 12 && s.tw.diplomacy <= 30)
+    return { id: 'economic_siege', winner: 'ccp' };
+  if (s.ccp.narrative >= 92 && s.tw.resilience <= 15 && s.tw.morale <= 35)
+    return { id: 'cognitive_victory', winner: 'ccp' };
+  if (s.tw.chip >= 94 && s.tw.diplomacy >= 90 && s.tw.economy >= 85)
+    return { id: 'silicon_peace', winner: 'tw' };
+  if (s.tw.diplomacy >= 92 && s.tw.softpower >= 85 && s.tw.morale >= 80)
+    return { id: 'diplomatic_victory', winner: 'tw' };
+  if (s.tw.military >= 92 && computeTWScore(s) >= 88 && computeCCPScore(s) <= 48)
+    return { id: 'deterrence', winner: 'tw' };
+  if (s.tension <= 10 && s.tw.resilience >= 80 && s.tw.morale >= 75)
+    return { id: 'stable_status_quo', winner: 'tw' };
+  // 中共視角特殊結局
+  if (s.ccp.loyalty <= 20 && s.ccp.economy <= 25)
+    return { id: 'ccp_internal_collapse', winner: 'tw' };
+  return null;
+}
+
 // ── 結局資料庫 ───────────────────────────────────────────
 const ENDINGS = {
-  war: {
-    title: '戰爭爆發', icon: '💥', winner: 'crisis',
-    headline: '砲聲響起——台海戰爭爆發',
-    desc: '兩岸緊張升至無可挽回的臨界點。解放軍開始封鎖，美日介入，第三次世界大戰陰影籠罩全球。',
-    flavor: '沒有贏家的戰爭，卻已無法阻止。',
-    color: '#3a0800',
-  },
-  collapse: {
-    title: '內部瓦解', icon: '🕳️', winner: 'ccp',
-    headline: '台灣從內部崩潰',
-    desc: '中共滲透已深入台灣政治、軍事與媒體核心。沒有一槍一炮，台灣的意志已被悄悄掏空。',
-    flavor: '最深的傷，永遠來自最近的人。',
-    color: '#1a0820',
-  },
-  morale_collapse: {
-    title: '士氣崩潰', icon: '🏳️', winner: 'ccp',
-    headline: '民心動搖，抵抗意志瓦解',
-    desc: '長期的認知作戰與軍事壓力讓台灣民心渙散，軍隊無力，人民無心。不戰而屈人之兵。',
-    flavor: '「他們甚至不需要開槍。」',
-    color: '#1e1000',
-  },
-  economic_siege: {
-    title: '經濟封鎖', icon: '⛓️', winner: 'ccp',
-    headline: '台灣經濟在封鎖中窒息',
-    desc: '中共以經濟手段持續擠壓，供應鏈切斷、金融攻擊接連發動。台灣在沒有子彈的戰爭中敗下陣來。',
-    flavor: '餓死不流血，但一樣死。',
-    color: '#1a1400',
-  },
-  cognitive_victory: {
-    title: '認知戰勝利', icon: '🧠', winner: 'ccp',
-    headline: '現實被重新定義',
-    desc: '長達數年的假訊息攻勢、深偽影片、社群操弄，讓台灣社會對自身存在的意義感到懷疑。中共不費一兵一卒。',
-    flavor: '當你開始懷疑自己，敵人已經贏了。',
-    color: '#150a1a',
-  },
-  silicon_peace: {
-    title: '矽盾和平', icon: '💎', winner: 'tw',
-    headline: '晶片外交確立台灣永久地位',
-    desc: '台灣的半導體優勢成為全球無可替代的戰略資產。任何侵台行動都意味著全球科技崩潰。中共選擇等待，和平在不確定中延續。',
-    flavor: '最強的武器，是讓全世界都需要你。',
-    color: '#001430',
-  },
-  diplomatic_victory: {
-    title: '外交勝利', icon: '🌐', winner: 'tw',
-    headline: '民主世界與台灣站在一起',
-    desc: '多年的外交努力、軟實力輸出與民主典範讓台灣在國際社會建立了難以動搖的道德高地。中共孤立，台灣雖小卻被世界擁抱。',
-    flavor: '不是因為我們強，而是因為我們對。',
-    color: '#001a20',
-  },
-  deterrence: {
-    title: '軍事嚇阻', icon: '🛡️', winner: 'tw',
-    headline: '刺蝟讓獵食者三思',
-    desc: '台灣的不對稱戰力、潛艦、無人機與完整的後備體系讓解放軍評估代價過高。台海暫時回歸平靜，但沒有人敢放鬆。',
-    flavor: '嚇阻不是勝利，但勝於一戰。',
-    color: '#001a10',
-  },
-  stable_status_quo: {
-    title: '現狀穩定', icon: '⚖️', winner: 'tw',
-    headline: '不確定的和平，卻是和平',
-    desc: '經過漫長的角力，兩岸緊張緩慢降溫。台灣民主愈加鞏固，國際認可雖非正式卻日漸深厚。沒有統一，也沒有戰爭。',
-    flavor: '在歷史的縫隙中，台灣找到了自己的位置。',
-    color: '#0a1400',
-  },
+  war:                 { title:'戰爭爆發',    icon:'💥', winner:'crisis', headline:'砲聲響起——台海戰爭爆發',      desc:'兩岸緊張升至無可挽回的臨界點。解放軍開始封鎖，美日介入，沒有贏家。',                           flavor:'沒有贏家的戰爭，卻已無法阻止。',     color:'#3a0800' },
+  collapse:            { title:'內部瓦解',    icon:'🕳️', winner:'ccp',    headline:'台灣從內部崩潰',              desc:'中共滲透深入台灣政治、軍事與媒體核心。不發一槍，台灣的意志已被悄悄掏空。',                     flavor:'最深的傷，永遠來自最近的人。',       color:'#1a0820' },
+  morale_collapse:     { title:'士氣崩潰',    icon:'🏳️', winner:'ccp',    headline:'民心動搖，抵抗意志瓦解',      desc:'長期的認知作戰與軍事壓力讓台灣民心渙散，不戰而屈人之兵。',                                       flavor:'「他們甚至不需要開槍。」',           color:'#1e1000' },
+  economic_siege:      { title:'經濟封鎖',    icon:'⛓️', winner:'ccp',    headline:'台灣經濟在封鎖中窒息',        desc:'中共以經濟手段持續擠壓，台灣在沒有子彈的戰爭中敗下陣來。',                                       flavor:'餓死不流血，但一樣死。',             color:'#1a1400' },
+  cognitive_victory:   { title:'認知戰勝利',  icon:'🧠', winner:'ccp',    headline:'現實被重新定義',              desc:'長達數年的假訊息攻勢讓台灣社會對自身存在的意義感到懷疑。中共不費一兵一卒。',                     flavor:'當你開始懷疑自己，敵人已經贏了。',   color:'#150a1a' },
+  silicon_peace:       { title:'矽盾和平',    icon:'💎', winner:'tw',     headline:'晶片外交確立台灣永久地位',    desc:'台灣的半導體優勢成為全球無可替代的戰略資產。任何侵台行動都意味著全球科技崩潰。',                 flavor:'最強的武器，是讓全世界都需要你。',   color:'#001430' },
+  diplomatic_victory:  { title:'外交勝利',    icon:'🌐', winner:'tw',     headline:'民主世界與台灣站在一起',      desc:'多年的外交努力讓台灣在國際社會建立了難以動搖的道德高地。中共孤立，台灣被世界擁抱。',             flavor:'不是因為我們強，而是因為我們對。',   color:'#001a20' },
+  deterrence:          { title:'軍事嚇阻',    icon:'🛡️', winner:'tw',     headline:'刺蝟讓獵食者三思',            desc:'台灣的不對稱戰力讓解放軍評估代價過高。台海暫時回歸平靜。',                                       flavor:'嚇阻不是勝利，但勝於一戰。',         color:'#001a10' },
+  stable_status_quo:   { title:'現狀穩定',    icon:'⚖️', winner:'tw',     headline:'不確定的和平，卻是和平',      desc:'兩岸緊張緩慢降溫，台灣民主愈加鞏固。沒有統一，也沒有戰爭。',                                     flavor:'在歷史的縫隙中，台灣找到了自己的位置。', color:'#0a1400' },
+  ccp_internal_collapse:{ title:'中共瓦解',   icon:'🏚️', winner:'tw',     headline:'中共從內部崩潰',              desc:'黨心渙散、經濟崩潰，中共政權陷入前所未有的危機。台灣得到了意想不到的喘息空間。',                 flavor:'歷史上每個看似永恆的政權，都有終結的一天。', color:'#0a0a00' },
 };
 
-// ── 工具 ─────────────────────────────────────────────────
+// ── 工具函式 ─────────────────────────────────────────────
 function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
-function getAllTaiwanCards() { return [...TAIWAN_CARDS, ...(typeof CUSTOM_TAIWAN_CARDS !== 'undefined' ? CUSTOM_TAIWAN_CARDS : [])]; }
-function getAllCCPCards()    { return [...CCP_CARDS,    ...(typeof CUSTOM_CCP_CARDS    !== 'undefined' ? CUSTOM_CCP_CARDS    : [])]; }
-function getCCPCardName(id) { const c = getAllCCPCards().find(c => c.id === id); return c ? c.name : id; }
+
+function getAllTaiwanCards() {
+  return [...TAIWAN_CARDS,
+    ...(typeof CUSTOM_TAIWAN_CARDS !== 'undefined' ? CUSTOM_TAIWAN_CARDS : [])];
+}
+function getAllCCPCards() {
+  return [...CCP_CARDS,
+    ...(typeof CUSTOM_CCP_CARDS !== 'undefined' ? CUSTOM_CCP_CARDS : [])];
+}
+
 function isTWCardAvailable(state, cardId) {
   const card = getAllTaiwanCards().find(c => c.id === cardId);
   if (!card) return false;
@@ -466,4 +485,13 @@ function isCCPCardAvailable(state, cardId) {
   const card = getAllCCPCards().find(c => c.id === cardId);
   if (!card) return false;
   return state.ccp.ap >= card.cost && (state.ccp.cooldowns[cardId] || 0) === 0;
+}
+
+// 卡牌對對方是否已揭露
+function isCardRevealedToPlayer(state, cardId, cardFaction) {
+  if (cardFaction === 'tw') {
+    return state.ccp.revealedCards.includes(cardId);
+  } else {
+    return state.tw.revealedCards.includes(cardId);
+  }
 }

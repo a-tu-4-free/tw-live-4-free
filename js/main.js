@@ -4,51 +4,31 @@
 
 let G = null;
 let activeTab = { tw: '軍事', ccp: '軍事' };
-let pendingCCPTrigger = null;
 
 // ── 初始化 ───────────────────────────────────────────────
-function init() {
-  G = createInitialState('vs_ai');
+function init(playerFaction) {
+  G = createInitialState(playerFaction || 'tw');
   G.tw.score  = computeTWScore(G);
   G.ccp.score = computeCCPScore(G);
+  const factionName = playerFaction === 'ccp' ? '中共' : '臺灣';
   renderAll();
-  addLog({ faction:'event', text:'遊戲開始。你是臺灣，中共每季隨機出招。守住，或被蠶食？', quarter:'2026Q1' });
+  addLog({
+    faction: 'event',
+    text: `遊戲開始，你扮演【${factionName}】。對方行動一開始全部隱藏。`,
+    quarter: '2026Q1'
+  });
   renderAll();
 }
 
 // ── 全域渲染 ─────────────────────────────────────────────
 function renderAll() {
+  if (!G) return;
   renderHeader();
   renderMap();
-  renderTWPanel();
-  renderCCPPanel();
+  renderLeftPanel();
+  renderRightPanel();
+  renderCenterPanel();
   renderLogPanel();
-  renderModeBar();
-  updateScoreLead();
-  renderDesktopMap();
-}
-
-function updateScoreLead() {
-  if (!G) return;
-  const tw = Math.round(G.tw.score), ccp = Math.round(G.ccp.score);
-  const lead = tw - ccp;
-  const el = document.getElementById('score-lead');
-  if (el) {
-    el.textContent = lead > 0 ? `+${lead}` : `${lead}`;
-    el.style.color = lead > 0 ? '#3a9eff' : lead < 0 ? '#e84040' : '#667788';
-  }
-}
-
-function renderDesktopMap() {
-  if (!G) return;
-  const dm = document.getElementById('map-container-desktop');
-  if (dm && typeof buildMapSVG === 'function') dm.innerHTML = buildMapSVG(G);
-}
-
-function renderMap() {
-  if (!G) return;
-  const m = document.getElementById('map-container');
-  if (m && typeof buildMapSVG === 'function') m.innerHTML = buildMapSVG(G);
 }
 
 function renderHeader() {
@@ -62,78 +42,196 @@ function renderHeader() {
   document.getElementById('hdr-year').textContent = `${G.year} Q${G.quarter}`;
 }
 
-
-function renderTWPanel() {
-  document.getElementById('tw-ap').textContent = G.tw.ap;
-  document.getElementById('tw-score').textContent = Math.round(G.tw.score);
-  document.getElementById('tw-stats').innerHTML = renderTWStats(G);
-  renderTWCards();
-  document.getElementById('tw-lock-msg').style.display = 'none';
+function renderMap() {
+  if (!G) return;
+  const m = document.getElementById('map-container');
+  if (m) m.innerHTML = buildMapSVG(G);
+  const dm = document.getElementById('map-container-desktop');
+  if (dm) dm.innerHTML = buildMapSVG(G);
 }
 
-function renderTWCards() {
-  const cards = getAllTaiwanCards();
-  const cats = [...new Set(cards.map(c => c.category))];
-  document.getElementById('tw-tabs').innerHTML = cats.map(cat =>
-    `<button class="tb ${activeTab.tw === cat ? 'tb-act tb-tw' : ''}" onclick="setTab('tw','${cat}')">${cat}</button>`
+// ── 左欄：玩家陣營 ───────────────────────────────────────
+function renderLeftPanel() {
+  const isTW = G.playerFaction === 'tw';
+  const panel = document.getElementById('left-panel');
+  const apEl  = document.getElementById('left-ap');
+  const scoreEl = document.getElementById('left-score');
+
+  if (isTW) {
+    panel.className = 'panel panel-tw-active';
+    document.getElementById('left-title').innerHTML =
+      `🇹🇼 臺灣 <span style="font-size:11px;color:var(--txt2);">（你）</span>`;
+    apEl.className = 'ap-badge ap-tw';
+    apEl.innerHTML = `AP <span id="left-ap-num">${G.tw.ap}</span>`;
+    scoreEl.className = 'big-score bs-tw';
+    scoreEl.textContent = Math.round(G.tw.score);
+    document.getElementById('left-stats').innerHTML = renderTWStats(G, false);
+    renderPlayerCards('tw');
+  } else {
+    panel.className = 'panel panel-ccp-active';
+    document.getElementById('left-title').innerHTML =
+      `🇨🇳 中共 <span style="font-size:11px;color:var(--txt2);">（你）</span>`;
+    apEl.className = 'ap-badge ap-ccp';
+    apEl.innerHTML = `AP <span id="left-ap-num">${G.ccp.ap}</span>`;
+    scoreEl.className = 'big-score bs-ccp';
+    scoreEl.textContent = Math.round(G.ccp.score);
+    document.getElementById('left-stats').innerHTML = renderCCPStats(G, false);
+    document.getElementById('left-infil').style.display = 'block';
+    document.getElementById('left-infil-track').innerHTML = renderInfiltrationTracker(G, false);
+    renderPlayerCards('ccp');
+  }
+}
+
+// ── 右欄：對手陣營 ───────────────────────────────────────
+function renderRightPanel() {
+  const isTW = G.playerFaction === 'tw';
+  const opponentFaction = isTW ? 'ccp' : 'tw';
+  const panel = document.getElementById('right-panel');
+  const scoreEl = document.getElementById('right-score');
+
+  if (isTW) {
+    panel.className = 'panel panel-ccp-side';
+    document.getElementById('right-title').innerHTML =
+      `🇨🇳 中共 <span style="font-size:11px;color:var(--txt2);">（AI）</span>`;
+    document.getElementById('right-ap').innerHTML = `AP <span>?</span>`;
+    document.getElementById('right-ap').className = 'ap-badge ap-ccp';
+    scoreEl.className = 'big-score bs-ccp';
+    scoreEl.textContent = G.tw.intel >= 60 ? Math.round(G.ccp.score) : '???';
+    document.getElementById('right-stats').innerHTML = renderCCPStats(G, true);
+    document.getElementById('right-infil').style.display = 'block';
+    document.getElementById('right-infil-track').innerHTML = renderInfiltrationTracker(G, true);
+  } else {
+    panel.className = 'panel panel-tw-side';
+    document.getElementById('right-title').innerHTML =
+      `🇹🇼 臺灣 <span style="font-size:11px;color:var(--txt2);">（AI）</span>`;
+    document.getElementById('right-ap').innerHTML = `AP <span>?</span>`;
+    document.getElementById('right-ap').className = 'ap-badge ap-tw';
+    scoreEl.className = 'big-score bs-tw';
+    scoreEl.textContent = G.ccp.intel >= 60 ? Math.round(G.tw.score) : '???';
+    document.getElementById('right-stats').innerHTML = renderTWStats(G, true);
+    document.getElementById('right-infil').style.display = 'none';
+  }
+
+  renderOpponentCards(opponentFaction);
+}
+
+// ── 玩家卡牌（可出牌）────────────────────────────────────
+function renderPlayerCards(faction) {
+  const cards = faction === 'tw' ? getAllTaiwanCards() : getAllCCPCards();
+  const cats  = [...new Set(cards.map(c => c.category))];
+  const tab   = activeTab[faction];
+
+  document.getElementById('left-tabs').innerHTML = cats.map(cat =>
+    `<button class="tb ${tab === cat ? (faction==='tw'?'tb-act tb-tw':'tb-act tb-ccp') : ''}"
+      onclick="setTab('${faction}','${cat}')">${cat}</button>`
   ).join('');
-  const shown = cards.filter(c => c.category === activeTab.tw);
-  document.getElementById('tw-cards').innerHTML = shown.map(c => {
-    const avail = isTWCardAvailable(G, c.id);
-    const cd = G.tw.cooldowns[c.id] || 0;
-    return renderCard(c, avail, 'tw', cd);
+
+  const shown = cards.filter(c => c.category === tab);
+  document.getElementById('left-cards').innerHTML = shown.map(c => {
+    const avail = faction === 'tw'
+      ? isTWCardAvailable(G, c.id)
+      : isCCPCardAvailable(G, c.id);
+    const cd = faction === 'tw'
+      ? (G.tw.cooldowns[c.id] || 0)
+      : (G.ccp.cooldowns[c.id] || 0);
+    return renderCard(c, avail, faction, cd, true);
   }).join('');
 }
 
-function renderCCPPanel() {
-  document.getElementById('ccp-ap').textContent = G.ccp.ap;
-  document.getElementById('ccp-score').textContent = Math.round(G.ccp.score);
-  document.getElementById('ccp-stats').innerHTML = renderCCPStats(G);
-  document.getElementById('infil-track').innerHTML = renderInfiltrationTracker(G);
-  renderCCPCards();
-  document.getElementById('ccp-lock-msg').style.display = 'none';
+// ── 對手卡牌（問號/揭露）────────────────────────────────
+function renderOpponentCards(faction) {
+  const cards = faction === 'tw' ? getAllTaiwanCards() : getAllCCPCards();
+  const cats  = [...new Set(cards.map(c => c.category))];
+  const tab   = activeTab[faction];
+  const revealedList = faction === 'tw'
+    ? G.ccp.revealedCards   // 中共已看到哪些台灣牌
+    : G.tw.revealedCards;   // 台灣已看到哪些中共牌
+
+  document.getElementById('right-tabs').innerHTML = cats.map(cat =>
+    `<button class="tb ${tab === cat ? (faction==='ccp'?'tb-act tb-ccp':'tb-act tb-tw') : ''}"
+      onclick="setTab('${faction}','${cat}')">${cat}</button>`
+  ).join('');
+
+  const shown = cards.filter(c => c.category === tab);
+  document.getElementById('right-cards').innerHTML = shown.map(c => {
+    const revealed = revealedList.includes(c.id);
+    return renderCard(c, false, faction, 0, revealed);
+  }).join('');
 }
 
-function renderCCPCards() {
-  const cards = getAllCCPCards();
-  const cats = [...new Set(cards.map(c => c.category))];
-  document.getElementById('ccp-tabs').innerHTML = cats.map(cat =>
-    `<button class="tb ${activeTab.ccp === cat ? 'tb-act tb-ccp' : ''}" onclick="setTab('ccp','${cat}')">${cat}</button>`
-  ).join('');
-  const shown = cards.filter(c => c.category === activeTab.ccp);
-  document.getElementById('ccp-cards').innerHTML = shown.map(c => {
-    const avail = false; // 中共由AI控制，玩家不可點擊
-    const cd = G.ccp.cooldowns[c.id] || 0;
-    return renderCard(c, avail, 'ccp', cd);
-  }).join('');
+// ── 中央面板 ─────────────────────────────────────────────
+function renderCenterPanel() {
+  const tw  = Math.round(G.tw.score);
+  const ccp = Math.round(G.ccp.score);
+  const lead = G.playerFaction === 'tw' ? tw - ccp : ccp - tw;
+  document.getElementById('score-tw').textContent  = tw;
+  document.getElementById('score-ccp').textContent = ccp;
+  const el = document.getElementById('score-lead');
+  el.textContent = lead > 0 ? `+${lead}` : `${lead}`;
+  el.style.color = lead > 0 ? '#44cc88' : lead < 0 ? '#ff4433' : '#667788';
 }
 
 function renderLogPanel() {
   document.getElementById('log-entries').innerHTML = renderLog(G);
 }
 
-function renderModeBar() {
-  document.getElementById('mode-bar').style.display = 'none';
+function addLog(e) {
+  G.log.unshift(e);
+  if (G.log.length > 40) G.log.pop();
+  renderLogPanel();
 }
 
 // ── Tab切換 ──────────────────────────────────────────────
 window.setTab = function(faction, cat) {
   activeTab[faction] = cat;
-  if (faction === 'tw') renderTWCards();
-  else renderCCPCards();
+  if (faction === G.playerFaction) renderPlayerCards(faction);
+  else renderOpponentCards(faction);
+};
+
+// ── 大卡彈出（爐石風格）─────────────────────────────────
+window.openCardDetail = function(faction, cardId) {
+  const card = faction === 'tw'
+    ? getAllTaiwanCards().find(c => c.id === cardId)
+    : getAllCCPCards().find(c => c.id === cardId);
+  if (!card) return;
+
+  // 只有玩家自己的牌可以互動
+  if (faction !== G.playerFaction) return;
+
+  const canPlay = faction === 'tw'
+    ? isTWCardAvailable(G, cardId)
+    : isCCPCardAvailable(G, cardId);
+  const cd = faction === 'tw'
+    ? (G.tw.cooldowns[cardId] || 0)
+    : (G.ccp.cooldowns[cardId] || 0);
+
+  const overlay = document.getElementById('card-detail-overlay');
+  document.getElementById('card-detail-content').innerHTML =
+    renderCardDetail(card, faction, canPlay, cd);
+  overlay.classList.add('mopen');
+};
+
+window.closeCardDetail = function() {
+  document.getElementById('card-detail-overlay').classList.remove('mopen');
+};
+
+window.playFromDetail = function(faction, cardId) {
+  window.closeCardDetail();
+  window.onCardClick(faction, cardId);
 };
 
 // ── 出牌 ─────────────────────────────────────────────────
 window.onCardClick = function(faction, cardId) {
   if (G.gameOver) return;
-  if (faction !== 'tw') return; // 中共由AI控制
+  if (faction !== G.playerFaction) return;
+
   if (faction === 'tw') {
     const res = playTaiwanCard(G, cardId);
     if (res.error) { showToast(res.error, 'warn'); return; }
     G = res.state;
     const card = getAllTaiwanCards().find(c => c.id === cardId);
     showToast(`✓ ${card.name}`, 'tw');
-    if (res.triggersCCP && G.mode === 'vs_ai') {
+    if (res.triggersCCP) {
       setTimeout(() => {
         const cres = playCCPCard(G, res.triggersCCP);
         if (!cres.error) {
@@ -157,31 +255,34 @@ window.onCardClick = function(faction, cardId) {
 // ── 推進下一季 ───────────────────────────────────────────
 window.nextQuarter = function() {
   if (G.gameOver) return;
-  G = autoCCPTurn(G);
-  doNextQuarter();
-};
-
-function doNextQuarter() {
+  // AI出剩餘AP
+  if (G.playerFaction === 'tw') {
+    G = autoCCPTurn(G);
+  } else {
+    G = autoTWTurn(G);
+  }
   const event = drawRandomEvent(G);
   showEventModal(event, () => {
     G = resolveEndOfQuarter(G, event);
     renderAll();
     checkGameOverUI();
-    showToast(`結算完成`, 'event');
-    // 季末可能出現軍師
+    showToast('季末結算完成', 'event');
     setTimeout(() => maybeShowAdvisor(), 600);
   });
-}
+};
 
 // ── 事件彈窗 ─────────────────────────────────────────────
 function showEventModal(event, onConfirm) {
   const m = document.getElementById('ev-modal');
   document.getElementById('ev-title').textContent = event.title;
-  document.getElementById('ev-body').textContent = event.body;
+  document.getElementById('ev-body').textContent  = event.body;
   document.getElementById('ev-efx').innerHTML = Object.entries(event.effects || {}).map(([k,v]) =>
     `<span class="eff ${v>0?'ep':'en'}">${fmtKey(k)} ${v>0?'+':''}${v}</span>`).join('');
   m.classList.add('mopen');
-  document.getElementById('ev-ok').onclick = () => { m.classList.remove('mopen'); onConfirm(); };
+  document.getElementById('ev-ok').onclick = () => {
+    m.classList.remove('mopen');
+    onConfirm();
+  };
 }
 
 // ── 遊戲結束UI ───────────────────────────────────────────
@@ -189,45 +290,18 @@ function checkGameOverUI() {
   if (!G.gameOver) return;
   const e = ENDINGS[G.gameOverId] || ENDINGS['war'];
   const m = document.getElementById('go-modal');
-  document.getElementById('go-icon').textContent = e.icon;
-  document.getElementById('go-title').textContent = e.title;
+  document.getElementById('go-icon').textContent     = e.icon;
+  document.getElementById('go-title').textContent    = e.title;
   document.getElementById('go-headline').textContent = e.headline;
-  document.getElementById('go-desc').textContent = e.desc;
-  document.getElementById('go-flavor').textContent = e.flavor;
+  document.getElementById('go-desc').textContent     = e.desc;
+  document.getElementById('go-flavor').textContent   = e.flavor;
   document.getElementById('go-stats').innerHTML =
-    `臺灣 <strong style="color:#3a9eff">${Math.round(G.tw.score)}</strong> 　
-     中共 <strong style="color:#e84040">${Math.round(G.ccp.score)}</strong> 　
+    `臺灣 <strong style="color:#3a9eff">${Math.round(G.tw.score)}</strong>
+     中共 <strong style="color:#e84040">${Math.round(G.ccp.score)}</strong>
      ${G.turnsPlayed} 季 · ${G.year}年`;
-  m.style.setProperty('--go-bg', e.color);
+  m.style.setProperty('--go-bg', e.color || '#001430');
   m.classList.add('mopen');
 }
-
-// ── Toast ─────────────────────────────────────────────────
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast t-${type||'info'} tshow`;
-  clearTimeout(window._tt);
-  window._tt = setTimeout(() => t.classList.remove('tshow'), 2600);
-}
-
-// ── Log追加 ───────────────────────────────────────────────
-function addLog(e) {
-  G.log.unshift(e); if (G.log.length > 40) G.log.pop();
-  renderLogPanel();
-}
-
-// ── 重新開始 / 模式選擇 ──────────────────────────────────
-window.restartGame  = () => { document.getElementById('go-modal').classList.remove('mopen'); init(); };
-window.showModeSelect = () => { document.getElementById('mode-modal').classList.add('mopen'); };
-window.startMode = () => {
-  document.getElementById('mode-modal').classList.remove('mopen');
-  init();
-};
-
-// ── 啟動 ─────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => init());
-
 
 // ── 軍師系統 ─────────────────────────────────────────────
 function maybeShowAdvisor() {
@@ -239,29 +313,24 @@ function maybeShowAdvisor() {
 
 function showAdvisorModal({ advisor, choices, isProCCP }) {
   const m = document.getElementById('advisor-modal');
-  const a = advisor;
+  document.getElementById('adv-avatar').textContent   = advisor.avatar;
+  document.getElementById('adv-name').textContent     = advisor.name;
+  document.getElementById('adv-fullname').textContent = advisor.fullName;
+  document.getElementById('adv-type').textContent     = isProCCP ? '⚠️ 來路可疑的軍師' : '✅ 可信任的軍師';
+  document.getElementById('adv-type').style.color     = isProCCP ? '#ffaa33' : '#44cc88';
+  document.getElementById('adv-intro').textContent    = advisor.intro;
 
-  document.getElementById('adv-avatar').textContent = a.avatar;
-  document.getElementById('adv-name').textContent = a.name;
-  document.getElementById('adv-fullname').textContent = a.fullName;
-  document.getElementById('adv-type').textContent = isProCCP ? '⚠️ 來路可疑的軍師' : '✅ 可信任的軍師';
-  document.getElementById('adv-type').style.color = isProCCP ? '#ffaa33' : '#44cc88';
-  document.getElementById('adv-intro').textContent = a.intro;
-
-  const choicesEl = document.getElementById('adv-choices');
-  choicesEl.innerHTML = choices.map((card, i) => {
+  document.getElementById('adv-choices').innerHTML = choices.map((card, i) => {
     const effStr = Object.entries(card.effects || {}).map(([k,v]) =>
       `<span class="eff ${v>0?'ep':'en'}">${fmtKey(k)} ${v>0?'+':''}${v}</span>`).join('');
-    return `
-      <div class="adv-card ${card.realEffect ? 'adv-real' : 'adv-fake'}"
-           onclick="window.pickAdvisorCard(${i})">
-        <div class="adv-card-name">${card.name}</div>
-        <div class="adv-card-desc">${card.desc}</div>
-        <div class="card-ef" style="margin-top:4px">${effStr}</div>
-      </div>`;
+    return `<div class="adv-card ${card.realEffect ? 'adv-real' : 'adv-fake'}"
+      onclick="window.pickAdvisorCard(${i})">
+      <div class="adv-card-name">${card.name}</div>
+      <div class="adv-card-desc">${card.desc}</div>
+      <div class="card-ef" style="margin-top:4px">${effStr}</div>
+    </div>`;
   }).join('');
 
-  // 儲存選項到全域
   window._advisorChoices = choices;
   m.classList.add('mopen');
 }
@@ -269,9 +338,7 @@ function showAdvisorModal({ advisor, choices, isProCCP }) {
 window.pickAdvisorCard = function(idx) {
   const card = window._advisorChoices[idx];
   if (!card) return;
-
   if (!card.realEffect) {
-    // 偽裝牌：先顯示警告，再套用真實效果
     showToast(card.warning || '⚠️ 這是陷阱！', 'warn');
     setTimeout(() => {
       G = applyAdvisorCard(G, card);
@@ -279,13 +346,11 @@ window.pickAdvisorCard = function(idx) {
       renderAll(); checkGameOverUI();
     }, 800);
   } else {
-    // 正向牌：套用效果
     G = applyAdvisorCard(G, card);
     G.log.unshift({ faction:'tw', text:`💡 軍師建議：${card.name}`, quarter:`${G.year}Q${G.quarter}` });
     showToast(`✓ 採納建議：${card.name}`, 'tw');
     renderAll(); checkGameOverUI();
   }
-
   document.getElementById('advisor-modal').classList.remove('mopen');
 };
 
@@ -293,3 +358,27 @@ window.skipAdvisor = function() {
   document.getElementById('advisor-modal').classList.remove('mopen');
   showToast('忽略軍師建議', 'event');
 };
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast t-${type||'info'} tshow`;
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('tshow'), 2600);
+}
+
+// ── 重啟 ─────────────────────────────────────────────────
+window.restartGame = () => {
+  document.getElementById('go-modal').classList.remove('mopen');
+  document.getElementById('mode-modal').classList.add('mopen');
+};
+window.startMode = (faction) => {
+  document.getElementById('mode-modal').classList.remove('mopen');
+  init(faction);
+};
+
+// ── 啟動 ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('mode-modal').classList.add('mopen');
+});
