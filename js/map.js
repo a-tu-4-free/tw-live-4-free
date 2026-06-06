@@ -34,7 +34,7 @@ function initLeafletMap(containerId) {
 
   // ESRI 世界衛星圖
   L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
     {
       maxZoom: 10,
       minZoom: 5,
