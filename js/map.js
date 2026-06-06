@@ -8,10 +8,10 @@ function buildMapSVG(state) {
   const inf = state.ccp.infiltrated;
   const ev  = state.mapEvents || [];
 
-  // 海域配色（更亮，配合全螢幕底圖）
-  const sea1 = t < 35 ? '#0d2a4a' : t < 55 ? '#0d2a18' : t < 75 ? '#2a1808' : '#2a0808';
-  const sea2 = t < 35 ? '#071a30' : t < 55 ? '#071a10' : t < 75 ? '#1a1006' : '#1a0606';
-  const glow = t < 35 ? 'rgba(40,130,220,0.30)' : t < 55 ? 'rgba(60,160,50,0.25)' : t < 75 ? 'rgba(200,100,15,0.28)' : 'rgba(220,30,15,0.32)';
+  // 海域配色（提亮版，全螢幕底圖需要可見）
+  const sea1 = t < 35 ? '#1a4a7a' : t < 55 ? '#1a4a28' : t < 75 ? '#4a2808' : '#4a0e0e';
+  const sea2 = t < 35 ? '#0d2a4a' : t < 55 ? '#0d2a18' : t < 75 ? '#2a1808' : '#2a0808';
+  const glow = t < 35 ? 'rgba(60,160,255,0.40)' : t < 55 ? 'rgba(60,180,60,0.35)' : t < 75 ? 'rgba(220,120,20,0.38)' : 'rgba(240,40,20,0.42)';
   const tensionColor = t < 35 ? '#44bb77' : t < 55 ? '#ffaa33' : t < 75 ? '#ff7733' : '#ff2211';
   const tensionLabel = t < 35 ? '和緩 😴' : t < 55 ? '緊張 😰' : t < 75 ? '高度緊張 😱' : '戰爭邊緣 💥';
 
@@ -175,17 +175,17 @@ ${Array.from({length:8},(_,i)=>`<line x1="0" y1="${i*44}" x2="480" y2="${i*44}" 
   L90,55 L92,50 L94,45 L96,40 L97,35
   L98,30 L99,25 L100,20 L101,15 L102,10
   L103,5 L104,0 Z"
-  fill="#223a20" stroke="#3a6035" stroke-width="0.8"/>
+  fill="#2e5528" stroke="#4a8844" stroke-width="1"/>
 
 <!-- 大陸燈光（都市群效果） -->
-<circle cx="28" cy="168" r="2.5" fill="#ffe8aa" opacity="0.35"/>
-<circle cx="42" cy="152" r="2" fill="#ffe8aa" opacity="0.28"/>
-<circle cx="55" cy="138" r="2" fill="#ffe8aa" opacity="0.22"/>
+<circle cx="28" cy="168" r="3" fill="#ffe8aa" opacity="0.55"/>
+<circle cx="42" cy="152" r="2.5" fill="#ffe8aa" opacity="0.45"/>
+<circle cx="55" cy="138" r="2" fill="#ffe8aa" opacity="0.38"/>
 
 <!-- 福建標示 -->
-<rect x="4" y="148" width="60" height="24" rx="4" fill="rgba(0,0,0,0.55)"/>
-<text x="34" y="158" font-size="8.5" fill="#6aaa64" text-anchor="middle" font-weight="600">中國大陸</text>
-<text x="34" y="168" font-size="7" fill="#4a8a44" text-anchor="middle">福建省 ▸</text>
+<rect x="4" y="148" width="60" height="24" rx="4" fill="rgba(0,0,0,0.50)"/>
+<text x="34" y="158" font-size="9" fill="#88cc80" text-anchor="middle" font-weight="600">中國大陸</text>
+<text x="34" y="168" font-size="7.5" fill="#66aa60" text-anchor="middle">福建省 ▸</text>
 
 <!-- ── 台灣海峽 ──────────────────────────────────────── -->
 <!-- 中線 -->
@@ -200,24 +200,24 @@ ${Array.from({length:8},(_,i)=>`<line x1="0" y1="${i*44}" x2="480" y2="${i*44}" 
 <!-- ── 日本九州（更精確形狀）──────────────────────── -->
 <path d="M268,44 L278,46 L286,52 L290,60 L288,68
   L282,72 L274,70 L268,64 L265,56 Z"
-  fill="#22284a" stroke="#3030608" stroke-width="0.8"/>
-<text x="278" y="60" font-size="7" fill="#5060a8" text-anchor="middle">九州</text>
+  fill="#2a3260" stroke="#4444aa" stroke-width="0.9"/>
+<text x="278" y="60" font-size="7.5" fill="#7788cc" text-anchor="middle">九州</text>
 
 <!-- 鹿兒島 -->
-<ellipse cx="278" cy="76" rx="6" ry="4" fill="#1c2244" stroke="#282e58" stroke-width="0.5" opacity="0.9"/>
+<ellipse cx="278" cy="76" rx="6" ry="4" fill="#222858" stroke="#3838a0" stroke-width="0.6" opacity="0.9"/>
 
 <!-- ── 沖繩群島 ──────────────────────────────────────── -->
-<ellipse cx="262" cy="98" rx="10" ry="6" fill="#1c2244" stroke="#282e60" stroke-width="0.7"/>
-<text x="262" y="101" font-size="6" fill="#5060a8" text-anchor="middle">沖繩</text>
+<ellipse cx="262" cy="98" rx="10" ry="6" fill="#222858" stroke="#3838a0" stroke-width="0.8"/>
+<text x="262" y="101" font-size="6.5" fill="#6677bb" text-anchor="middle">沖繩</text>
 <!-- 宮古島 -->
-<ellipse cx="248" cy="116" rx="5" ry="3" fill="#1c2244" stroke="#282e58" stroke-width="0.5" opacity="0.8"/>
-<text x="248" y="118" font-size="5" fill="#404880" text-anchor="middle">宮古</text>
+<ellipse cx="248" cy="116" rx="5" ry="3" fill="#222858" stroke="#3838a0" stroke-width="0.5" opacity="0.85"/>
+<text x="248" y="118" font-size="5.5" fill="#5566aa" text-anchor="middle">宮古</text>
 
 <!-- ── 菲律賓呂宋島 ──────────────────────────────── -->
 <path d="M244,208 L252,212 L258,222 L256,234
   L250,240 L242,236 L238,228 L240,218 Z"
-  fill="#203020" stroke="#2e4828" stroke-width="0.5" opacity="0.85"/>
-<text x="248" y="226" font-size="6.5" fill="#508855" text-anchor="middle">菲律賓</text>
+  fill="#284030" stroke="#3a6040" stroke-width="0.6" opacity="0.9"/>
+<text x="248" y="226" font-size="7" fill="#60aa70" text-anchor="middle">菲律賓</text>
 
 <!-- ── 台灣本島（精確輪廓）──────────────────────── -->
 <path d="
@@ -229,7 +229,7 @@ ${Array.from({length:8},(_,i)=>`<line x1="0" y1="${i*44}" x2="480" y2="${i*44}" 
   L182,178 L180,173 L179,167 L179,160
   L180,153 L181,146 L182,139 L184,132
   L186,126 L188,120 L191,115 L194,111 Z"
-  fill="#2e5040" stroke="#55cc88" stroke-width="1.6" filter="url(#glow1)"/>
+  fill="#3a6848" stroke="#77ee99" stroke-width="2" filter="url(#glow1)"/>
 
 <!-- 中央山脈（山脊線）-->
 <path d="M196,116 L197,122 L198,128 L199,135 L199,142 L199,149 L198,156 L197,162 L195,168 L193,174 L190,179"

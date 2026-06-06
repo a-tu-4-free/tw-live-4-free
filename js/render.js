@@ -154,16 +154,24 @@ function renderLog(state) {
 // ── key formatter ─────────────────────────────────────────
 function fmtKey(key) {
   const m = {
+    // 台灣欄位
     military:'軍事', economy:'經濟', chip:'晶片', diplomacy:'外交',
     morale:'士氣', intel:'情報', resilience:'韌性', softpower:'軟實力',
-    tension:'緊張', tech:'科技', loyalty:'黨心', stability:'維穩',
-    narrative:'話語權', infiltration:'滲透',
-    tw_military:'台軍', tw_economy:'台經', tw_chip:'台晶',
-    tw_diplomacy:'台外', tw_morale:'台士氣', tw_intel:'台情',
-    tw_resilience:'台韌', tw_softpower:'台軟',
-    ccp_military:'共軍', ccp_economy:'共經', ccp_tech:'共科技',
-    ccp_diplomacy:'共外', ccp_loyalty:'共黨心', ccp_intel:'共情',
-    ccp_stability:'共維穩', ccp_narrative:'共話語', ccp_infiltration:'共滲透',
+    tension:'緊張',
+    // 中共欄位（新）
+    tech:'科技', loyalty:'黨心', stability:'維穩', narrative:'話語權',
+    infiltration:'滲透度',
+    // 中共舊欄位（直接顯示中文）
+    propaganda:'宣傳', cyber:'網軍',
+    // tw_ 前綴
+    tw_military:'台灣軍事', tw_economy:'台灣經濟', tw_chip:'台灣晶片',
+    tw_diplomacy:'台灣外交', tw_morale:'台灣士氣', tw_intel:'台灣情報',
+    tw_resilience:'台灣韌性', tw_softpower:'台灣軟實力',
+    // ccp_ 前綴
+    ccp_military:'中共軍事', ccp_economy:'中共經濟', ccp_tech:'中共科技',
+    ccp_diplomacy:'中共外交', ccp_loyalty:'中共黨心', ccp_intel:'中共情報',
+    ccp_stability:'中共維穩', ccp_narrative:'中共話語', ccp_infiltration:'中共滲透',
+    ccp_propaganda:'中共宣傳', ccp_cyber:'中共網軍',
   };
   return m[key] || key;
 }

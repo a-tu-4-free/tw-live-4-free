@@ -65,7 +65,7 @@ function clamp(val, min = 0, max = 100) {
 // 欄位別名：舊卡牌用的名字 → 新欄位名
 const STAT_ALIAS = {
   propaganda: 'narrative',  // 中共宣傳 → 話語權
-  cyber: 'tech',            // 中共網軍計入科技
+  cyber:      'tech',       // 中共網軍計入科技
 };
 
 function applyEffects(state, effects) {
