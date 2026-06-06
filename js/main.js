@@ -419,6 +419,67 @@ function showToast(msg, type) {
   window._tt = setTimeout(() => t.classList.remove('tshow'), 2600);
 }
 
+// ── 分享功能 ─────────────────────────────────────────────
+window.shareGame = async function() {
+  const url = 'https://a-tu-4-free.github.io/tw-live-4-free/';
+  const faction = G.playerFaction === 'tw' ? '🇹🇼 臺灣' : '🇨🇳 中共';
+  const twScore  = Math.round(G.tw.score);
+  const ccpScore = Math.round(G.ccp.score);
+  const shareText = `我正在玩【臺灣不沉】兩岸戰略對決\n扮演：${faction} | 第 ${G.turnsPlayed} 季 | ${G.year}年\n🇹🇼 ${twScore} vs 🇨🇳 ${ccpScore} | 緊張度 ${Math.round(G.tension)}\n\n${url}`;
+
+  // 優先嘗試截圖分享
+  try {
+    if (navigator.share) {
+      // Web Share API（手機支援）
+      await navigator.share({ title: '臺灣不沉', text: shareText, url });
+      showToast('分享成功！', 'event');
+      return;
+    }
+  } catch(e) {}
+
+  // 桌機：截圖 + 複製文字
+  try {
+    // html2canvas 截圖
+    if (typeof html2canvas !== 'undefined') {
+      const canvas = await html2canvas(document.getElementById('app'), {
+        useCORS: true, scale: 1,
+        ignoreElements: el => el.classList.contains('overlay'),
+      });
+      canvas.toBlob(async blob => {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          showToast('截圖已複製到剪貼簿！', 'event');
+        } catch(e) {
+          // 截圖失敗就只複製文字
+          copyTextFallback(shareText);
+        }
+      });
+      return;
+    }
+  } catch(e) {}
+
+  // 最終fallback：複製文字+網址
+  copyTextFallback(shareText);
+};
+
+function copyTextFallback(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('網址與戰況已複製！貼上分享給朋友', 'event'))
+      .catch(() => showToast('請手動複製：' + text, 'warn'));
+  } else {
+    // 超舊瀏覽器
+    const el = document.createElement('textarea');
+    el.value = text; el.style.position = 'fixed'; el.style.opacity = '0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('戰況已複製！貼上分享給朋友', 'event');
+  }
+}
+
 // ── 重啟 ─────────────────────────────────────────────────
 window.restartGame = () => {
   document.getElementById('go-modal').classList.remove('mopen');
