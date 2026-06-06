@@ -671,3 +671,87 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 #map-wrap-desktop .leaflet-tile {
   filter: brightness(1.7) contrast(1.05) saturate(1.2);
 }
+
+/* ── 面板固定/滾動分離 ────────────────────────────────────── */
+@media(min-width:900px){
+  /* 左右欄改成 flex column，讓固定區 + 滾動區分開 */
+  #left-panel, #right-panel {
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 固定區：不滾動 */
+  #left-fixed, #right-fixed {
+    flex-shrink: 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--bdr);
+  }
+
+  /* 滾動區：卡片可滾動 */
+  #left-cards-wrap, #right-cards-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-top: 6px;
+  }
+  #left-cards-wrap::-webkit-scrollbar { width: 3px; }
+  #right-cards-wrap::-webkit-scrollbar { width: 3px; }
+}
+
+/* ── 文字亮度提升 ─────────────────────────────────────────── */
+/* 國力指標文字 */
+.stat-label { color: #aac4dd !important; }
+.stat-val   { color: #ddeeff !important; font-weight: 700; }
+.sv-high    { color: #55ee99 !important; }
+.sv-mid     { color: #ffcc44 !important; }
+.sv-low     { color: #ff6655 !important; }
+.stat-hidden{ color: #667788 !important; }
+
+/* sdiv 分類標題 */
+.sdiv { color: #7a99bb !important; }
+
+/* p-title（陣營標題） */
+.p-title { color: #eef4ff !important; }
+
+/* 卡片文字 */
+.card-nm { color: #eef4ff !important; font-size: 13px; }
+.card-ds { color: #b0cce0 !important; }
+.card-ct { color: #7a99bb !important; }
+.card-fl { color: #6a8899 !important; }
+.card-ap { color: #ffd055 !important; }
+
+/* Tab 按鈕文字 */
+.tb         { color: #8ab0cc !important; }
+.tb-tw.tb-act  { color: #66ccff !important; }
+.tb-ccp.tb-act { color: #ff8888 !important; }
+
+/* 日誌文字 */
+.log-hd  { color: #7a99bb !important; }
+.lt { color: #66aaee !important; }
+.lc { color: #ee8877 !important; }
+.le { color: #bb99ff !important; }
+
+/* infil 文字 */
+.infil-item { color: #8aaccc !important; }
+.infil-on   { color: #ff7766 !important; }
+
+/* big-score */
+.big-score  { text-shadow: 0 0 20px currentColor; }
+
+/* ── 分享按鈕 ─────────────────────────────────────────────── */
+.share-btn {
+  padding: 8px 14px;
+  background: rgba(170,119,255,0.12);
+  border: 1px solid rgba(170,119,255,0.35);
+  border-radius: var(--r2);
+  color: var(--pur);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all .2s;
+  white-space: nowrap;
+}
+.share-btn:hover { background: rgba(170,119,255,0.22); transform: translateY(-1px); }
+.share-btn:active { transform: scale(.97); }
