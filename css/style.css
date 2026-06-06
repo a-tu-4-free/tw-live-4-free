@@ -755,3 +755,188 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 }
 .share-btn:hover { background: rgba(170,119,255,0.22); transform: translateY(-1px); }
 .share-btn:active { transform: scale(.97); }
+
+/* ══════════════════════════════════════════════════════════
+   手機版佈局（< 900px）
+   ══════════════════════════════════════════════════════════ */
+@media(max-width:899px){
+
+  /* 桌機版隱藏 */
+  #main { display: none !important; }
+
+  /* 手機版顯示 */
+  #mobile-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 70px);
+  }
+
+  /* 地圖 */
+  #map-wrap {
+    position: relative !important;
+    height: 220px;
+    flex-shrink: 0;
+    z-index: 0;
+  }
+  #map-container { width: 100%; height: 100%; }
+
+  /* 陣營 Tab */
+  #mobile-faction-tabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--bdr);
+    background: rgba(8,14,26,0.92);
+    backdrop-filter: blur(10px);
+  }
+  .mob-tab {
+    flex: 1;
+    padding: 10px 8px;
+    background: transparent;
+    border: none;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--txt2);
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .mob-tab-tw.mob-tab-act {
+    color: var(--tw);
+    border-bottom-color: var(--tw);
+    background: rgba(58,158,255,0.08);
+  }
+  .mob-tab-ccp.mob-tab-act {
+    color: var(--ccp);
+    border-bottom-color: var(--ccp);
+    background: rgba(232,64,64,0.08);
+  }
+  .mob-tab-ap {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    color: var(--txt2);
+  }
+
+  /* 國力指標區（固定高度，可捲動） */
+  #mobile-stats-wrap {
+    flex-shrink: 0;
+    background: rgba(8,14,26,0.88);
+    backdrop-filter: blur(10px);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--bdr);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .mob-stats-panel {}
+  .mob-score {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  #mobile-stats-left .mob-score { color: var(--tw); }
+  #mobile-stats-right .mob-score { color: var(--ccp); }
+
+  /* 卡片左右滑動區 */
+  #mobile-cards-wrap {
+    flex-shrink: 0;
+    background: rgba(8,14,26,0.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--bdr);
+  }
+  #mobile-cards-header {
+    padding: 8px 14px 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  #mobile-cards-header .tabs {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    margin-bottom: 0;
+  }
+
+  /* 卡片滑動容器 */
+  #mob-cards-slider-wrap {
+    overflow: hidden;
+    position: relative;
+  }
+  #mob-cards-slider {
+    display: flex;
+    transition: transform 0.3s ease;
+    will-change: transform;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mob-card-page {
+    min-width: 100%;
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  /* 滑動指示點 */
+  #mob-card-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 0;
+  }
+  .mob-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .mob-dot.dot-act { background: var(--tw); width: 14px; border-radius: 3px; }
+  .mob-dot-ccp.dot-act { background: var(--ccp); }
+
+  /* 分數 + 按鈕列 */
+  #mobile-action-bar {
+    flex-shrink: 0;
+    background: rgba(8,14,26,0.92);
+    backdrop-filter: blur(10px);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid var(--bdr);
+  }
+  .mob-scores {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  .mob-s-tw   { color: var(--tw); }
+  .mob-s-ccp  { color: var(--ccp); }
+  .mob-s-lead { color: var(--txt2); font-size: 12px; }
+  .mob-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .mob-btns .next-btn { flex: 1; }
+  .mob-btns .share-btn { padding: 10px 14px; }
+
+  /* 日誌 */
+  #mobile-log {
+    flex: 1;
+    background: rgba(0,0,0,0.5);
+    padding: 8px 14px;
+    overflow-y: auto;
+    max-height: 140px;
+  }
+}
+
+/* 桌機版隱藏手機佈局 */
+@media(min-width:900px){
+  #mobile-layout { display: none !important; }
+}
