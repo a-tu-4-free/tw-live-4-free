@@ -34,7 +34,7 @@ function initLeafletMap(containerId) {
 
   // ESRI 世界衛星圖
   L.tileLayer(
-    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
     {
       maxZoom: 10,
       minZoom: 5,
