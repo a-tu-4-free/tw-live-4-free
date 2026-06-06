@@ -64,8 +64,8 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 .t-status{font-size:11px;font-weight:700;min-width:70px;text-align:right;color:var(--txt1)}
 
 /* ── Layout ──────────────────────────────────────────────── */
-#app{display:flex;flex-direction:column;height:calc(100vh - 62px)}
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#app{display:flex;flex-direction:column;min-height:100vh}
+#main{flex:1;display:flex;flex-direction:column;overflow:visible}
 
 /* ── Map ─────────────────────────────────────────────────── */
 #map-wrap{
@@ -73,7 +73,7 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
   background:var(--bg1);
   border-bottom:1px solid var(--bdr);
   padding:0;
-  height:200px;
+  height:160px;
   overflow:hidden;
   position:relative;
 }
@@ -95,10 +95,10 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 .end-turn-btn:hover{background:rgba(255,255,255,0.14)}
 
 /* ── Panels ──────────────────────────────────────────────── */
-#panels{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#panels{flex:1;display:flex;flex-direction:column;overflow:visible}
 .panel{
-  background:var(--bg2);overflow-y:auto;
-  padding:10px 12px;flex:1;
+  background:var(--bg2);overflow-y:visible;
+  padding:10px 12px;
 }
 #tw-panel{border-bottom:1px solid var(--bdr-tw)}
 #ccp-panel{border-top:1px solid var(--bdr-ccp)}
@@ -230,9 +230,31 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 .card-fl{font-size:9px;color:var(--txt2);font-style:italic;margin-top:3px;border-top:1px solid var(--bdr);padding-top:3px;line-height:1.35}
 
 /* ── Modals ──────────────────────────────────────────────── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;padding:16px}
+.overlay{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.85);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  overflow-y:auto;
+}
 .overlay.mopen{display:flex}
-.mbox{background:var(--bg3);border-radius:var(--r3);border:1px solid var(--bdr);padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px}
+.mbox{
+  background:var(--bg3);
+  border-radius:var(--r3);
+  border:1px solid var(--bdr);
+  padding:20px;
+  max-width:420px;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-height:90vh;
+  overflow-y:auto;
+}
 
 /* Event modal */
 .ev-tag{font-size:9px;letter-spacing:2px;color:var(--pur);text-transform:uppercase}
@@ -286,23 +308,23 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
    DESKTOP  ≥900px — 三欄左右
    ═══════════════════════════════════════════════════════════ */
 @media(min-width:900px){
-  #app{height:100vh}
-  #main{flex:1;flex-direction:row;overflow:hidden}
+  #app{height:100vh;min-height:unset}
+  #main{flex:1;flex-direction:row;overflow:hidden;height:calc(100vh - 62px)}
 
   #map-wrap{
     display:none; /* desktop: 地圖嵌入左欄下方 */
   }
 
   #panels{
-    flex:1;flex-direction:row;overflow:hidden;
+    flex:1;flex-direction:row;overflow:hidden;height:100%;
   }
 
   /* 左欄：台灣 */
   #tw-panel{
     width:290px;min-width:250px;flex-shrink:0;
     border-bottom:none;border-right:1px solid var(--bdr-tw);
-    overflow-y:auto;display:flex;flex-direction:column;
-    position:relative;
+    overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;
+    position:relative;height:100%;
   }
 
   /* 中欄 */
@@ -326,8 +348,8 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
   #ccp-panel{
     width:290px;min-width:250px;flex-shrink:0;
     border-top:none;border-left:1px solid var(--bdr-ccp);
-    overflow-y:auto;display:flex;flex-direction:column;
-    position:relative;
+    overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;
+    position:relative;height:100%;
   }
 
   .card-grid{grid-template-columns:repeat(2,1fr)}

@@ -3,28 +3,62 @@
 // ============================================================
 
 function createInitialState(mode) {
+  // ── 2026年真實情勢評估 ──────────────────────────────────
+  // 臺灣：
+  //   軍事58  — 國防預算佔GDP約2.4%，後備改革仍不足，F-16升級中，自製潛艦剛下水
+  //   經濟82  — 半導體出口強勁但內需不振，通膨壓力，貿易高度依賴中美
+  //   晶片92  — 台積電2nm量產，全球先進製程市佔超70%，矽盾地位穩固
+  //   外交48  — 邦交國僅剩12個，WHO持續被拒，但非正式關係持續深化
+  //   士氣62  — 部分民眾仍存有「打不過就算了」心態，但主流民意支持防衛
+  //   情報55  — 多起共諜案曝光，反情報能力仍有漏洞
+  //   韌性50  — 能源高度依賴進口，民防意識薄弱，防空洞多數老舊
+  //   軟實力65 — 民主典範、防疫成績、文化輸出有一定能量
+  //
+  // 中共：
+  //   軍事88  — 解放軍現代化快速推進，火箭軍飛彈覆蓋全台，但貪腐問題嚴重
+  //   網軍78  — APT41等組織長期滲透，基礎設施攻擊能力強
+  //   宣傳72  — 認知作戰滲透台灣媒體、社群，但可信度下滑
+  //   外交65  — 一帶一路影響力廣，但西方圍堵加劇，俄烏戰後形象受損
+  //   經濟58  — 恆大爆雷、房地產危機、青年失業率高，內需疲軟
+  //   滲透48  — 多條滲透線已布建，退將、媒體、政界均有觸角
   return {
     year: 2026, quarter: 1,
-    tension: 40,
+    tension: 52,  // 2026年台海緊張度偏高，ADIZ侵擾常態化
     gameOver: false, gameOverId: null, winner: null,
     phase: 'action',
-    mode: mode || 'vs_ai', // 'vs_ai' | 'two_player'
-    activeFaction: 'tw',   // two_player 模式用
+    mode: mode || 'vs_ai',
+    activeFaction: 'tw',
     thisQuarterLog: [],
-    mapEvents: [],         // 地圖動態事件佇列
+    mapEvents: [],
     tw: {
       ap: 3, maxAp: 3,
-      military: 75, economy: 88, chip: 90, diplomacy: 62,
-      morale: 78, intel: 68, resilience: 60, softpower: 55,
+      military:   58,  // 國防改革中，仍有明顯缺口
+      economy:    82,  // 出口強但結構脆弱
+      chip:       92,  // 唯一全球性優勢，矽盾核心
+      diplomacy:  48,  // 邦交國稀少，國際空間狹窄
+      morale:     62,  // 民心支持但「反正有美國」心態普遍
+      intel:      55,  // 反情報有進步但漏洞仍多
+      resilience: 50,  // 民防薄弱，能源脆弱
+      softpower:  65,  // 民主、防疫、文化有一定能量
       score: 0, cooldowns: {}, infiltrationCleared: 0,
       usedCards: [],
     },
     ccp: {
       ap: 3, maxAp: 3,
-      military: 85, economy: 72, cyber: 70, propaganda: 62,
-      diplomacy: 68, infiltration: 35, intel: 55,
+      military:    88,  // 解放軍現代化先進，但腐敗侵蝕戰力
+      economy:     58,  // 房地產危機+青年失業，內部壓力大
+      cyber:       78,  // 網路攻擊能力強，長期滲透台灣基設
+      propaganda:  72,  // 認知作戰佈局深，但可信度下滑中
+      diplomacy:   65,  // 一帶一路廣但西方圍堵加劇
+      infiltration:48,  // 已布建多條線，退將/媒體/政界均有
+      intel:       60,
       score: 0, cooldowns: {},
-      infiltrated: { retired_officers: false, legislators: false, journalists: false, students: false },
+      infiltrated: {
+        retired_officers: false,
+        legislators:      false,
+        journalists:      false,
+        students:         false,
+      },
       usedCards: [],
     },
     log: [], eventHistory: [], turnsPlayed: 0,
