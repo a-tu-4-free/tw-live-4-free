@@ -62,15 +62,15 @@ function renderInfiltrationTracker(state, isOpponent) {
     </div>`;
   }
   const lbls = {
-    retired_officers:'退役將領',
-    legislators:'立法院',
-    journalists:'媒體線人',
-    students:'校園情報'
+    retired_officers: '退役將領',
+    legislators:      '立法院',
+    journalists:      '媒體線人',
+    students:         '校園情報'
   };
-  return Object.entries(state.ccp.infiltrated).map(([k,v]) => `
+  return Object.entries(state.ccp.infiltrated).map(([k, v]) => `
     <div class="infil-item ${v ? 'infil-on' : ''}">
       <span class="infil-dot ${v ? 'dot-on' : 'dot-off'}"></span>
-      <span>${lbls[k]}</span>
+      <span>${lbls[k] || k}</span>
       ${v ? '<span class="infil-tag">已滲透</span>' : ''}
     </div>`).join('');
 }

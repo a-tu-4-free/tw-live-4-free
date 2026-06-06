@@ -66,6 +66,7 @@ function renderLeftPanel() {
     scoreEl.className = 'big-score bs-tw';
     scoreEl.textContent = Math.round(G.tw.score);
     document.getElementById('left-stats').innerHTML = renderTWStats(G, false);
+    document.getElementById('left-infil').style.display = 'none'; // 台灣沒有滲透追蹤
     renderPlayerCards('tw');
   } else {
     panel.className = 'panel panel-ccp-active';
