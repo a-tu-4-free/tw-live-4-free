@@ -664,5 +664,5 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
   font-family: var(--font) !important;
 }
 .leaflet-tile {
-  filter: brightness(1.8) contrast(1.1) saturate(1.2);
+  filter: brightness(2.0) contrast(1.05) saturate(1.3);
 }
