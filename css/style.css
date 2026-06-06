@@ -663,6 +663,11 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
   background: #0d2a4a !important;
   font-family: var(--font) !important;
 }
-.leaflet-tile {
-  filter: brightness(2.0) contrast(1.05) saturate(1.3);
+
+/* 衛星圖調亮——只作用在地圖圖磚本身，不影響面板 */
+#map-container .leaflet-tile,
+#map-container-desktop .leaflet-tile,
+#map-wrap .leaflet-tile,
+#map-wrap-desktop .leaflet-tile {
+  filter: brightness(1.7) contrast(1.05) saturate(1.2);
 }
