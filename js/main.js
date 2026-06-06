@@ -306,28 +306,48 @@ function checkGameOverUI() {
 // ── 軍師系統 ─────────────────────────────────────────────
 function maybeShowAdvisor() {
   if (!G || G.gameOver) return;
-  const result = drawAdvisor(G.turnsPlayed);
+  const result = drawAdvisor(G.turnsPlayed, G.playerFaction);
   if (!result) return;
   showAdvisorModal(result);
 }
 
-function showAdvisorModal({ advisor, choices, isProCCP }) {
+function showAdvisorModal({ advisor, choices, advisorType }) {
   const m = document.getElementById('advisor-modal');
+  const isSuspect = advisorType === 'pro_ccp';
+  const isCCPInternal = advisorType === 'ccp_internal';
+  const isCCPFriendly = advisorType === 'ccp_friendly';
+
+  // 標題標籤
+  let typeLabel, typeColor, headerLabel;
+  if (isCCPInternal) {
+    typeLabel = '📋 黨內提案'; typeColor = '#e84040'; headerLabel = '本季收到提案';
+  } else if (isCCPFriendly) {
+    typeLabel = '🤝 友好建議'; typeColor = '#ffaa33'; headerLabel = '本季收到建議';
+  } else if (isSuspect) {
+    typeLabel = '⚠️ 來路可疑'; typeColor = '#ffaa33'; headerLabel = '本季收到建議';
+  } else {
+    typeLabel = '✅ 可信來源'; typeColor = '#44cc88'; headerLabel = '本季收到建議';
+  }
+
+  document.getElementById('adv-header-label').textContent = headerLabel;
   document.getElementById('adv-avatar').textContent   = advisor.avatar;
   document.getElementById('adv-name').textContent     = advisor.name;
   document.getElementById('adv-fullname').textContent = advisor.fullName;
-  document.getElementById('adv-type').textContent     = isProCCP ? '⚠️ 來路可疑的軍師' : '✅ 可信任的軍師';
-  document.getElementById('adv-type').style.color     = isProCCP ? '#ffaa33' : '#44cc88';
+  document.getElementById('adv-type').textContent     = typeLabel;
+  document.getElementById('adv-type').style.color     = typeColor;
+  // tagline（第一行，聽起來很對）
+  document.getElementById('adv-tagline').textContent  = advisor.tagline || '';
+  // intro（第二行，真實態度）
   document.getElementById('adv-intro').textContent    = advisor.intro;
 
   document.getElementById('adv-choices').innerHTML = choices.map((card, i) => {
     const effStr = Object.entries(card.effects || {}).map(([k,v]) =>
-      `<span class="eff ${v>0?'ep':'en'}">${fmtKey(k)} ${v>0?'+':''}${v}</span>`).join('');
+      `<span class="eff ${v>0?'ep':'en'}">${fmtKey(k)} ${v>0?'+':''} ${v}</span>`).join('');
     return `<div class="adv-card ${card.realEffect ? 'adv-real' : 'adv-fake'}"
       onclick="window.pickAdvisorCard(${i})">
       <div class="adv-card-name">${card.name}</div>
       <div class="adv-card-desc">${card.desc}</div>
-      <div class="card-ef" style="margin-top:4px">${effStr}</div>
+      <div class="card-ef" style="margin-top:5px">${effStr}</div>
     </div>`;
   }).join('');
 

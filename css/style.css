@@ -328,3 +328,112 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 @media(min-width:1280px){
   #left-panel,#right-panel{width:330px}
 }
+
+/* ── 建議彈窗（重設計）──────────────────────────────────── */
+.adv-mbox { max-width: 490px; gap: 14px; }
+
+.adv-header {
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 6px;
+}
+.adv-header-tag {
+  font-size: 10px; letter-spacing: 1.5px;
+  color: var(--txt2); text-transform: uppercase;
+}
+.adv-type-badge {
+  font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+}
+
+.adv-identity {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--r2);
+  border: 1px solid var(--bdr);
+}
+.adv-avatar { font-size: 42px; line-height: 1; flex-shrink: 0; }
+.adv-identity-text { display: flex; flex-direction: column; gap: 3px; }
+.adv-name { font-size: 18px; font-weight: 700; color: var(--txt0); }
+.adv-fullname { font-size: 11px; color: var(--txt2); }
+
+/* 第一行：大方向（強調顯示） */
+.adv-tagline {
+  font-size: 14px; font-weight: 600;
+  color: var(--txt0); line-height: 1.5;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.06);
+  border-radius: var(--r2);
+  border-left: 3px solid var(--chip);
+}
+
+/* 第二行：真實台詞（小字） */
+.adv-intro {
+  font-size: 12px; color: var(--txt2);
+  line-height: 1.65; font-style: italic;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--r1);
+}
+
+.adv-choices-label {
+  font-size: 11px; color: var(--txt2);
+  letter-spacing: 0.5px;
+}
+.adv-choices-grid {
+  display: flex; flex-direction: column; gap: 8px;
+}
+/* 手機橫向排列 */
+@media (min-width: 500px) {
+  .adv-choices-grid { flex-direction: row; }
+  .adv-card { flex: 1; }
+}
+
+.adv-card {
+  border-radius: var(--r2); border: 1px solid var(--bdr);
+  padding: 11px 12px; cursor: pointer; transition: all .18s;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.adv-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+.adv-real { background: rgba(58,158,255,0.08); border-color: rgba(58,158,255,0.28); }
+.adv-real:hover { background: rgba(58,158,255,0.16); }
+.adv-fake { background: rgba(255,170,51,0.07); border-color: rgba(255,170,51,0.22); }
+.adv-fake:hover { background: rgba(255,170,51,0.15); }
+.adv-card-name { font-size: 13px; font-weight: 700; color: var(--txt0); }
+.adv-card-desc { font-size: 11px; color: var(--txt1); line-height: 1.4; }
+
+.adv-skip-btn {
+  padding: 10px; width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--bdr); border-radius: var(--r2);
+  color: var(--txt2); font-size: 12px; cursor: pointer;
+  font-family: var(--font); transition: all .2s;
+}
+.adv-skip-btn:hover { background: rgba(255,255,255,0.1); color: var(--txt1); }
+
+/* ── 手機版修正 ──────────────────────────────────────────── */
+@media (max-width: 899px) {
+  /* 地圖只顯示一個，不重疊 */
+  #map-wrap { display: block; height: 155px; }
+  #map-wrap-desktop { display: none !important; }
+
+  /* 面板正常流排列，不overflow hidden */
+  #panels { overflow: visible; }
+  .panel { overflow: visible; }
+
+  /* 中央分數區橫向 */
+  #center-col {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  /* 彈窗確保在最上層 */
+  .overlay { z-index: 9999; }
+  .mbox { margin: auto; }
+
+  /* 建議彈窗手機版 */
+  .adv-mbox { max-width: 100%; }
+  .adv-tagline { font-size: 13px; }
+}
