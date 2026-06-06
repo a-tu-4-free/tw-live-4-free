@@ -44,10 +44,8 @@ function renderHeader() {
 
 function renderMap() {
   if (!G) return;
-  const m = document.getElementById('map-container');
-  if (m) m.innerHTML = buildMapSVG(G);
-  const dm = document.getElementById('map-container-desktop');
-  if (dm) dm.innerHTML = buildMapSVG(G);
+  // Leaflet 版：buildMapSVG 負責初始化和更新，不回傳 SVG 字串
+  buildMapSVG(G);
 }
 
 // ── 左欄：玩家陣營 ───────────────────────────────────────
