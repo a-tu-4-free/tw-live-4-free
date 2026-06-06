@@ -546,3 +546,120 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 #go-modal[style*="15"] .go-warn-line,
 #go-modal[style*="18"] .go-warn-line,
 #go-modal[style*="14"] .go-warn-line { border-left-color: rgba(232,64,64,0.25); }
+
+/* ── Leaflet 地圖客製化 ──────────────────────────────────── */
+
+/* 地圖容器必須有明確高度 */
+#map-container,
+#map-container-desktop {
+  width: 100%;
+  height: 100%;
+  background: #0d2a4a;
+}
+
+/* 隱藏 Leaflet 預設 attribution */
+.leaflet-control-attribution { display: none !important; }
+.leaflet-control-zoom { display: none !important; }
+
+/* 滲透閃爍點 */
+.infil-pulse-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #ff2200;
+  box-shadow: 0 0 8px #ff2200;
+  animation: infil-pulse 1.4s ease-in-out infinite;
+}
+@keyframes infil-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.3; transform: scale(0.7); }
+}
+
+/* 地圖 Tooltip 樣式 */
+.map-tooltip-tw {
+  background: rgba(10,30,60,0.90) !important;
+  border: 1px solid #3a9eff !important;
+  color: #88ccff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  font-family: var(--font) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+  white-space: nowrap !important;
+}
+.map-tooltip-tw::before { border-right-color: #3a9eff !important; }
+
+.map-tooltip-ccp {
+  background: rgba(40,8,8,0.90) !important;
+  border: 1px solid #e84040 !important;
+  color: #ffaaaa !important;
+  font-size: 11px !important;
+  font-family: var(--font) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+}
+.map-tooltip-ccp::before { border-right-color: #e84040 !important; }
+
+.map-tooltip-us {
+  background: rgba(8,16,50,0.90) !important;
+  border: 1px solid #4488ff !important;
+  color: #aaccff !important;
+  font-size: 11px !important;
+  font-family: var(--font) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+}
+
+.map-tooltip-island {
+  background: rgba(10,40,20,0.85) !important;
+  border: 1px solid #44cc88 !important;
+  color: #88eebb !important;
+  font-size: 10px !important;
+  font-family: var(--font) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+.map-tooltip-sm {
+  background: rgba(10,20,40,0.80) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  color: #aabbcc !important;
+  font-size: 10px !important;
+  font-family: var(--font) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* 緊張度 HUD */
+.map-tension-hud {
+  background: rgba(5,10,20,0.82);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 140px;
+  pointer-events: none;
+}
+.hud-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.hud-label { font-size: 10px; color: rgba(255,255,255,0.5); font-family: var(--font); }
+.hud-val   { font-size: 14px; font-weight: 700; font-family: var(--font); }
+.hud-bar-bg {
+  height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.hud-bar-fill { height: 100%; border-radius: 3px; transition: width .5s; }
+.hud-status { font-size: 11px; font-weight: 600; font-family: var(--font); }
+
+/* Leaflet tile 載入中的背景 */
+.leaflet-container {
+  background: #0d2a4a !important;
+  font-family: var(--font) !important;
+}
