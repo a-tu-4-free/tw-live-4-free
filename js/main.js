@@ -494,3 +494,223 @@ window.startMode = (faction) => {
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('mode-modal').classList.add('mopen');
 });
+
+// ══════════════════════════════════════════════════════════
+// 手機版專用邏輯
+// ══════════════════════════════════════════════════════════
+
+let mobActiveFaction = 'left'; // 'left'=玩家, 'right'=對手
+let mobCardPage = 0;           // 目前卡片頁
+let mobCardPages = [];         // 所有頁（每頁4張）
+let mobSwipeStartX = 0;
+let mobIsCCP = false;          // 目前顯示的是否為中共卡
+
+// ── 判斷是否手機版 ──────────────────────────────────────
+function isMobile() {
+  return window.innerWidth < 900;
+}
+
+// ── 手機版全域渲染 ───────────────────────────────────────
+function renderMobile() {
+  if (!isMobile() || !G) return;
+  renderMobileHeader();
+  renderMobileFactionTabs();
+  renderMobileStats();
+  renderMobileCards();
+  renderMobileActionBar();
+  renderMobileLog();
+}
+
+function renderMobileHeader() {
+  // 已由 renderHeader() 處理，共用 header
+}
+
+function renderMobileFactionTabs() {
+  const isTW = G.playerFaction === 'tw';
+  const playerName  = isTW ? '臺灣' : '中共';
+  const opponentName= isTW ? '中共' : '臺灣';
+  document.getElementById('mob-tab-left-name').textContent  = playerName;
+  document.getElementById('mob-tab-right-name').textContent = opponentName;
+  document.getElementById('mob-ap-left').textContent  = `AP ${isTW ? G.tw.ap : G.ccp.ap}`;
+  document.getElementById('mob-ap-right').textContent = '對手';
+}
+
+function renderMobileStats() {
+  const isTW = G.playerFaction === 'tw';
+  const showingPlayer = mobActiveFaction === 'left';
+
+  // 左側（玩家）
+  const lScore = isTW ? Math.round(G.tw.score) : Math.round(G.ccp.score);
+  document.getElementById('mob-score-left').textContent = lScore;
+  document.getElementById('mob-stats-left-content').innerHTML =
+    isTW ? renderTWStats(G, false) : renderCCPStats(G, false);
+
+  // 滲透狀態（中共玩家左欄顯示）
+  const lInfil = document.getElementById('mob-infil-left');
+  const lInfilTrack = document.getElementById('mob-infil-left-track');
+  if (!isTW) {
+    lInfil.style.display = 'block';
+    lInfilTrack.innerHTML = renderInfiltrationTracker(G, false);
+  } else {
+    lInfil.style.display = 'none';
+  }
+
+  // 右側（對手）
+  const rScore = isTW ? Math.round(G.ccp.score) : Math.round(G.tw.score);
+  const rScoreEl = document.getElementById('mob-score-right');
+  const playerIntel = isTW ? G.tw.intel : G.ccp.intel;
+  rScoreEl.textContent = playerIntel >= 60 ? rScore : '???';
+  document.getElementById('mob-stats-right-content').innerHTML =
+    isTW ? renderCCPStats(G, true) : renderTWStats(G, true);
+
+  const rInfilTrack = document.getElementById('mob-infil-right-track');
+  rInfilTrack.innerHTML = renderInfiltrationTracker(G, true);
+
+  // 顯示/隱藏
+  document.getElementById('mobile-stats-left').style.display  = showingPlayer ? 'block' : 'none';
+  document.getElementById('mobile-stats-right').style.display = showingPlayer ? 'none' : 'block';
+}
+
+function renderMobileCards() {
+  const isTW = G.playerFaction === 'tw';
+  const showingPlayer = mobActiveFaction === 'left';
+  mobIsCCP = showingPlayer ? !isTW : isTW;
+
+  const faction = showingPlayer ? G.playerFaction : (isTW ? 'ccp' : 'tw');
+  const cards = faction === 'tw' ? getAllTaiwanCards() : getAllCCPCards();
+  const cats  = [...new Set(cards.map(c => c.category))];
+  const revealedList = faction === 'tw' ? G.ccp.revealedCards : G.tw.revealedCards;
+  const isOpponent = !showingPlayer;
+
+  // Tab 按鈕（共用 mob-card-tabs）
+  const tabEl = document.getElementById('mob-card-tabs');
+  const activeTabFaction = faction === 'tw' ? 'tw' : 'ccp';
+  tabEl.innerHTML = cats.map(cat =>
+    `<button class="tb ${activeTab[faction]===cat ? `tb-act tb-${activeTabFaction}` : ''}"
+      onclick="setMobTab('${faction}','${cat}')">${cat}</button>`
+  ).join('');
+
+  // 過濾當前類別
+  const shown = cards.filter(c => c.category === activeTab[faction]);
+
+  // 分頁（每頁 4 張）
+  const pageSize = 4;
+  mobCardPages = [];
+  for (let i = 0; i < shown.length; i += pageSize) {
+    mobCardPages.push(shown.slice(i, i + pageSize));
+  }
+  mobCardPage = Math.min(mobCardPage, Math.max(0, mobCardPages.length - 1));
+
+  // 渲染所有頁面
+  const slider = document.getElementById('mob-cards-slider');
+  slider.innerHTML = mobCardPages.map((page, pi) => {
+    const cardsHTML = page.map(c => {
+      const revealed = isOpponent ? revealedList.includes(c.id) : true;
+      const avail = !isOpponent && (
+        faction === 'tw' ? isTWCardAvailable(G, c.id) : isCCPCardAvailable(G, c.id)
+      );
+      const cd = faction === 'tw'
+        ? (G.tw.cooldowns[c.id] || 0)
+        : (G.ccp.cooldowns[c.id] || 0);
+      return renderCard(c, avail, faction, cd, revealed);
+    }).join('');
+    return `<div class="mob-card-page">${cardsHTML}</div>`;
+  }).join('');
+
+  // 設定 slider 位移
+  slider.style.transform = `translateX(-${mobCardPage * 100}%)`;
+
+  // 指示點
+  renderMobileDots(faction);
+
+  // 手勢事件（重新綁定）
+  bindSwipeEvents();
+}
+
+function renderMobileDots(faction) {
+  const dots = document.getElementById('mob-card-dots');
+  const isCCPfaction = faction === 'ccp';
+  dots.innerHTML = mobCardPages.map((_, i) =>
+    `<div class="mob-dot ${isCCPfaction ? 'mob-dot-ccp' : ''} ${i === mobCardPage ? 'dot-act' : ''}"
+      onclick="goMobPage(${i})"></div>`
+  ).join('');
+}
+
+function renderMobileActionBar() {
+  const tw  = Math.round(G.tw.score);
+  const ccp = Math.round(G.ccp.score);
+  const lead = G.playerFaction === 'tw' ? tw - ccp : ccp - tw;
+  document.getElementById('mob-score-tw').textContent  = tw;
+  document.getElementById('mob-score-ccp').textContent = ccp;
+  const el = document.getElementById('mob-score-lead');
+  el.textContent = lead > 0 ? `+${lead}` : `${lead}`;
+  el.style.color = lead > 0 ? '#44cc88' : lead < 0 ? '#ff4433' : '#667788';
+}
+
+function renderMobileLog() {
+  document.getElementById('mobile-log-entries').innerHTML = renderLog(G);
+}
+
+// ── 切換陣營面板 ─────────────────────────────────────────
+window.switchMobileFaction = function(side) {
+  mobActiveFaction = side;
+  mobCardPage = 0;
+
+  // Tab 樣式
+  const ltab = document.getElementById('mob-tab-left');
+  const rtab = document.getElementById('mob-tab-right');
+  const isTW = G.playerFaction === 'tw';
+
+  ltab.className = `mob-tab mob-tab-${isTW ? 'tw' : 'ccp'} ${side === 'left' ? 'mob-tab-act' : ''}`;
+  rtab.className = `mob-tab mob-tab-${isTW ? 'ccp' : 'tw'} ${side === 'right' ? 'mob-tab-act' : ''}`;
+
+  renderMobileStats();
+  renderMobileCards();
+};
+
+// ── Tab 切換 ─────────────────────────────────────────────
+window.setMobTab = function(faction, cat) {
+  activeTab[faction] = cat;
+  mobCardPage = 0;
+  renderMobileCards();
+};
+
+// ── 卡片換頁 ─────────────────────────────────────────────
+window.goMobPage = function(page) {
+  mobCardPage = page;
+  const slider = document.getElementById('mob-cards-slider');
+  slider.style.transform = `translateX(-${page * 100}%)`;
+  const faction = mobActiveFaction === 'left' ? G.playerFaction : (G.playerFaction === 'tw' ? 'ccp' : 'tw');
+  renderMobileDots(faction);
+};
+
+// ── 手勢滑動 ─────────────────────────────────────────────
+function bindSwipeEvents() {
+  const wrap = document.getElementById('mob-cards-slider-wrap');
+  if (!wrap) return;
+
+  // 移除舊監聽（避免重複綁定）
+  wrap.replaceWith(wrap.cloneNode(true));
+  const newWrap = document.getElementById('mob-cards-slider-wrap');
+
+  newWrap.addEventListener('touchstart', e => {
+    mobSwipeStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  newWrap.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - mobSwipeStartX;
+    if (Math.abs(dx) < 40) return; // 太短忽略
+    if (dx < 0 && mobCardPage < mobCardPages.length - 1) {
+      goMobPage(mobCardPage + 1);
+    } else if (dx > 0 && mobCardPage > 0) {
+      goMobPage(mobCardPage - 1);
+    }
+  }, { passive: true });
+}
+
+// ── patch renderAll 加入手機版渲染 ───────────────────────
+const _origRenderAll = window.renderAll;
+window.renderAll = function() {
+  _origRenderAll();
+  if (isMobile()) renderMobile();
+};
