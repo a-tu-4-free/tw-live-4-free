@@ -25,8 +25,8 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 
 /* ── Header ─────────────────────────────────────────────── */
 #header{
-  position:sticky;top:0;z-index:100;
-  background:rgba(5,8,15,0.97);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:200;
+  background:rgba(5,8,15,0.92);backdrop-filter:blur(16px);
   border-bottom:1px solid var(--bdr);
   padding:8px 14px;display:flex;flex-direction:column;gap:5px;
 }
@@ -43,26 +43,37 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 .t-status{font-size:11px;font-weight:700;color:var(--txt1)}
 
 /* ── Layout 手機 ─────────────────────────────────────────── */
-#app{display:flex;flex-direction:column;min-height:100vh}
-#main{flex:1;display:flex;flex-direction:column}
+#app{display:flex;flex-direction:column;min-height:100vh;position:relative}
+#main{flex:1;display:flex;flex-direction:column;position:relative;z-index:1}
 
-/* Map 手機 */
-#map-wrap{height:155px;background:var(--bg1);border-bottom:1px solid var(--bdr);overflow:hidden;flex-shrink:0}
+/* Map 手機：全寬底圖 */
+#map-wrap{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  z-index:0;background:var(--bg0);overflow:hidden;
+  pointer-events:none;
+}
 #map-container{width:100%;height:100%}
 #mode-bar{display:none}
 
-/* Panels 手機：上下堆疊 */
+/* Panels 手機：浮在底圖上，半透明 */
+#main{position:relative;z-index:1}
 #panels{display:flex;flex-direction:column}
-.panel{background:var(--bg2);padding:12px 13px}
+.panel{
+  background:rgba(10,16,30,0.82);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  padding:12px 13px;
+  border:1px solid rgba(255,255,255,0.08);
+}
 
 /* 面板邊框顏色 */
-.panel-tw-active{border-bottom:2px solid var(--bdr-tw)}
-.panel-ccp-active{border-bottom:2px solid var(--bdr-ccp)}
-.panel-tw-side{border-top:1px solid var(--bdr-tw)}
-.panel-ccp-side{border-top:1px solid var(--bdr-ccp)}
+.panel-tw-active{border-bottom:2px solid var(--bdr-tw);border-top:none}
+.panel-ccp-active{border-bottom:2px solid var(--bdr-ccp);border-top:none}
+.panel-tw-side{border-top:2px solid var(--bdr-tw)}
+.panel-ccp-side{border-top:2px solid var(--bdr-ccp)}
 
 /* Center col 手機 */
-#center-col-wrap{background:var(--bg3)}
+#center-col-wrap{background:rgba(10,16,28,0.80);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #map-wrap-desktop{display:none}
 #center-col{
   display:flex;flex-direction:row;align-items:center;
@@ -88,7 +99,7 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 .next-btn:active{transform:scale(.97)}
 
 /* Log */
-#log-wrap{max-height:130px;overflow-y:auto;background:rgba(0,0,0,0.5);padding:8px 13px;border-top:1px solid var(--bdr)}
+#log-wrap{max-height:130px;overflow-y:auto;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:8px 13px;border-top:1px solid var(--bdr)}
 .log-hd{font-size:9px;color:var(--txt2);letter-spacing:1.5px;margin-bottom:5px;text-transform:uppercase}
 .log-entry{font-size:12px;line-height:1.7;padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.025)}
 .lt{color:#5599dd} .lc{color:#dd6655} .le{color:#aa88ff}
@@ -292,36 +303,78 @@ body{font-family:var(--font);background:var(--bg0);color:var(--txt0);min-height:
 .t-warn{background:rgba(255,170,51,.18);color:var(--amb);border:1px solid rgba(255,170,51,.4)}
 
 /* ═══════════════════════════════════════════════════════════
-   DESKTOP ≥900px — 三欄
+   DESKTOP ≥900px — 三欄 + 全螢幕底圖
    ═══════════════════════════════════════════════════════════ */
 @media(min-width:900px){
-  #app{height:100vh;overflow:hidden}
-  #main{flex-direction:row;height:calc(100vh - 70px);overflow:hidden}
-  #map-wrap{display:none}
+  #app{height:100vh;overflow:hidden;position:relative}
+
+  /* 地圖：全螢幕底圖 */
+  #map-wrap{
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    z-index:0;height:auto;
+    background:var(--bg0);overflow:hidden;
+    pointer-events:none;
+  }
+  #map-container{width:100%;height:100%}
+
+  /* Header 浮在底圖上 */
+  #header{position:relative;z-index:200}
+
+  #main{
+    position:relative;z-index:1;
+    flex-direction:row;
+    height:calc(100vh - 70px);
+    overflow:hidden;
+  }
+
+  /* 桌機不再有獨立地圖欄 */
+  #map-wrap-desktop{display:none!important}
+
   #panels{flex:1;flex-direction:row;overflow:hidden;height:100%}
 
-  /* 左欄 */
+  /* 左欄：半透明 */
   #left-panel{
     width:295px;min-width:260px;flex-shrink:0;
-    border-bottom:none;border-right:1px solid var(--bdr-tw);
+    border-bottom:none;
+    border-right:1px solid rgba(58,158,255,0.2);
     overflow-y:auto;overflow-x:hidden;height:100%;
+    background:rgba(8,14,26,0.80);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
   }
-  .panel-ccp-active#left-panel{border-right-color:rgba(232,64,64,0.3)}
+  .panel-ccp-active#left-panel{border-right-color:rgba(232,64,64,0.2)}
 
-  /* 中欄 */
-  #center-col-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--bdr)}
-  #map-wrap-desktop{display:block;height:210px;background:var(--bg1);border-bottom:1px solid var(--bdr);overflow:hidden;flex-shrink:0}
-  #map-container-desktop{width:100%;height:100%}
-  #center-col{flex-shrink:0;flex-direction:column;border-top:none;border-bottom:none;padding:12px;gap:10px}
-  #log-wrap{flex:1;max-height:none;overflow-y:auto;border-top:1px solid var(--bdr)}
+  /* 中欄：更透明，讓地圖透出來 */
+  #center-col-wrap{
+    flex:1;display:flex;flex-direction:column;overflow:hidden;
+    border-right:1px solid rgba(255,255,255,0.06);
+    background:rgba(6,10,20,0.55);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  #center-col{
+    flex-shrink:0;flex-direction:column;
+    border-top:none;border-bottom:1px solid rgba(255,255,255,0.06);
+    padding:12px;gap:10px;
+    background:rgba(8,14,28,0.70);
+  }
+  #log-wrap{
+    flex:1;max-height:none;overflow-y:auto;
+    border-top:none;
+    background:rgba(0,0,0,0.45);
+  }
 
-  /* 右欄 */
+  /* 右欄：半透明 */
   #right-panel{
     width:295px;min-width:260px;flex-shrink:0;
-    border-top:none;border-left:1px solid var(--bdr-ccp);
+    border-top:none;
+    border-left:1px solid rgba(232,64,64,0.2);
     overflow-y:auto;overflow-x:hidden;height:100%;
+    background:rgba(8,14,26,0.80);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
   }
-  .panel-tw-side#right-panel{border-left-color:rgba(58,158,255,0.3)}
+  .panel-tw-side#right-panel{border-left-color:rgba(58,158,255,0.2)}
 
   .card-grid{grid-template-columns:repeat(2,1fr)}
 }

@@ -352,23 +352,44 @@ function showAdvisorModal({ advisor, choices, advisorType }) {
   }).join('');
 
   window._advisorChoices = choices;
+  window._advisorType = advisorType;
   m.classList.add('mopen');
 }
 
 window.pickAdvisorCard = function(idx) {
   const card = window._advisorChoices[idx];
   if (!card) return;
-  if (!card.realEffect) {
+
+  const isCCPMode = G.playerFaction === 'ccp';
+  const advisorType = window._advisorType || '';
+
+  // 中共模式下的舔共友好建議：這些牌對中共是有利的
+  // （台灣刪國防預算、開放中資等，從中共角度是好事）
+  const isPositiveForCCP = isCCPMode && advisorType === 'ccp_friendly';
+
+  if (!card.realEffect && !isPositiveForCCP) {
+    // 台灣模式下的陷阱牌
     showToast(card.warning || '⚠️ 這是陷阱！', 'warn');
     setTimeout(() => {
       G = applyAdvisorCard(G, card);
-      G.log.unshift({ faction:'ccp', text:`☠️ 中共偽裝建議：${card.name} 造成傷害`, quarter:`${G.year}Q${G.quarter}` });
+      G.log.unshift({
+        faction: 'ccp',
+        text: `☠️ 偽裝建議奏效：${card.name}`,
+        quarter: `${G.year}Q${G.quarter}`
+      });
       renderAll(); checkGameOverUI();
     }, 800);
   } else {
+    // 正向牌（或中共模式下的舔共牌）
     G = applyAdvisorCard(G, card);
-    G.log.unshift({ faction:'tw', text:`💡 軍師建議：${card.name}`, quarter:`${G.year}Q${G.quarter}` });
-    showToast(`✓ 採納建議：${card.name}`, 'tw');
+    const logFaction = isCCPMode ? 'ccp' : 'tw';
+    const logIcon = isCCPMode ? '📋' : '💡';
+    G.log.unshift({
+      faction: logFaction,
+      text: `${logIcon} 採納建議：${card.name}`,
+      quarter: `${G.year}Q${G.quarter}`
+    });
+    showToast(`✓ 採納：${card.name}`, logFaction);
     renderAll(); checkGameOverUI();
   }
   document.getElementById('advisor-modal').classList.remove('mopen');

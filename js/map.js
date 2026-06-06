@@ -139,7 +139,7 @@ function buildMapSVG(state) {
       <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="2.8s" repeatCount="indefinite"/>
     </line>` : '';
 
-  return `<svg viewBox="0 0 320 265" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+  return `<svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;object-fit:cover;">
 <defs>
   <linearGradient id="seaV" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%" stop-color="${sea1}"/>
@@ -155,14 +155,16 @@ function buildMapSVG(state) {
 </defs>
 
 <!-- 海洋底色 -->
-<rect width="320" height="265" fill="url(#seaV)"/>
-<ellipse cx="155" cy="185" rx="145" ry="72" fill="${glow}" filter="url(#blur2)"/>
+<rect width="480" height="300" fill="url(#seaV)"/>
+<ellipse cx="230" cy="200" rx="220" ry="95" fill="${glow}" filter="url(#blur2)"/>
 
 <!-- 細格線（衛星感） -->
-${Array.from({length:9},(_,i)=>`<line x1="${i*40}" y1="0" x2="${i*40}" y2="265" stroke="rgba(255,255,255,0.022)" stroke-width="0.5"/>`).join('')}
-${Array.from({length:7},(_,i)=>`<line x1="0" y1="${i*44}" x2="320" y2="${i*44}" stroke="rgba(255,255,255,0.022)" stroke-width="0.5"/>`).join('')}
+${Array.from({length:13},(_,i)=>`<line x1="${i*40}" y1="0" x2="${i*40}" y2="300" stroke="rgba(255,255,255,0.018)" stroke-width="0.5"/>`).join('')}
+${Array.from({length:8},(_,i)=>`<line x1="0" y1="${i*44}" x2="480" y2="${i*44}" stroke="rgba(255,255,255,0.018)" stroke-width="0.5"/>`).join('')}
 
-<!-- ── 中國大陸（更細緻海岸線）──────────────────────── -->
+<!-- ── 地理層整體右移80px讓台灣更居中 ──────────────── -->
+<g transform="translate(80,10)">
+<!-- ── 中國大陸（更細緻海岸線）────────────────────────── -->
 <path d="M0,0 L0,265 L4,265 L6,258 L8,248 L10,235
   L11,225 L12,218 L14,212 L16,206 L18,200
   L20,195 L21,190 L22,183 L22,176 L21,169
@@ -313,18 +315,18 @@ ${diploLines}
 <text x="8" y="23" font-size="6.5" fill="${tensionColor}">${tensionLabel}</text>
 
 <!-- ── HUD：右上年份 ──────────────────────────── -->
-<rect x="226" y="4" width="90" height="18" rx="4" fill="rgba(0,0,0,0.62)"/>
-<text x="271" y="16" font-size="9.5" fill="#aabbcc" text-anchor="middle"
+<rect x="376" y="4" width="100" height="18" rx="4" fill="rgba(0,0,0,0.62)"/>
+<text x="426" y="16" font-size="9.5" fill="#aabbcc" text-anchor="middle"
   font-family="'Courier New',monospace">${state.year} Q${state.quarter}</text>
 
 <!-- ── 圖例底部 ──────────────────────────────── -->
 <rect x="0" y="249" width="320" height="16" fill="rgba(0,0,0,0.45)"/>
-<circle cx="8" cy="257" r="3" fill="#3a9eff"/>
-<text x="14" y="260" font-size="6" fill="#6699bb">台灣行動</text>
-<circle cx="70" cy="257" r="3" fill="#cc3300"/>
-<text x="76" y="260" font-size="6" fill="#bb6644">中共行動</text>
-<circle cx="132" cy="257" r="3" fill="#cc3300"><animate attributeName="opacity" values="1;0.2;1" dur="1.5s" repeatCount="indefinite"/></circle>
-<text x="138" y="260" font-size="6" fill="#bb5533">滲透中</text>
-<text x="200" y="260" font-size="6" fill="#5577aa">${state.tw.diplomacy > 70 ? '外交連線' : ''}</text>
+<circle cx="8" cy="292" r="3" fill="#3a9eff"/>
+<text x="14" y="295" font-size="6" fill="#6699bb">台灣行動</text>
+<circle cx="80" cy="292" r="3" fill="#cc3300"/>
+<text x="86" y="295" font-size="6" fill="#bb6644">中共行動</text>
+<circle cx="152" cy="292" r="3" fill="#cc3300"><animate attributeName="opacity" values="1;0.2;1" dur="1.5s" repeatCount="indefinite"/></circle>
+<text x="158" y="295" font-size="6" fill="#bb5533">滲透中</text>
+<text x="240" y="295" font-size="6" fill="#5577aa">${state.tw.diplomacy > 70 ? '外交連線' : ''}</text>
 </svg>`;
 }
